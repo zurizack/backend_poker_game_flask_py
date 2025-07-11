@@ -2,7 +2,7 @@
 import gevent.monkey
 gevent.monkey.patch_all()
 
-from .poker_server import create_app, socketio
+from poker_server import create_app, socketio
 
 # יצירת מופע האפליקציה.
 # Gunicorn יטען את הקובץ הזה ויחפש משתנה בשם 'app' כדי להפעיל את השרת.
