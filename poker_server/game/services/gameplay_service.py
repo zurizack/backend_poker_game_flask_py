@@ -1,11 +1,11 @@
 
 # poker_sever/game/services/gameplay_service.py
 
-from backend.poker_server.game.core.stages import advance_stage, is_betting_round_over
-from backend.poker_server.game.core.turn import advance_turn
-from backend.poker_server.game.core.utils import find_player_by_id
-from backend.poker_server.game.core.validators import validate_player_action_request
-from backend.poker_server.game.core.actions import (
+from poker_server.game.core.stages import advance_stage, is_betting_round_over
+from poker_server.game.core.turn import advance_turn
+from poker_server.game.core.utils import find_player_by_id
+from poker_server.game.core.validators import validate_player_action_request
+from poker_server.game.core.actions import (
     apply_bet,
     apply_call,
     apply_check,

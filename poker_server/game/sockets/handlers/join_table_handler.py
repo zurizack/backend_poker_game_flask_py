@@ -1,4 +1,4 @@
-# backend/poker_server/game/sockets/handlers/join_table_handler.py
+# poker_server/game/sockets/handlers/join_table_handler.py
 
 import logging
 from typing import Dict, Any, Optional
@@ -6,10 +6,10 @@ from flask_socketio import SocketIO, join_room, leave_room
 from flask_login import current_user
 
 # Import the global instance of game_manager_instance
-from backend.poker_server import game_manager_instance 
+from poker_server import game_manager_instance 
 
-from backend.poker_server.game.sockets.emitters_oop import PokerEmitters
-from backend.poker_server.game.engine.player_oop import Player
+from poker_server.game.sockets.emitters_oop import PokerEmitters
+from poker_server.game.engine.player_oop import Player
 
 logger = logging.getLogger(__name__)
 

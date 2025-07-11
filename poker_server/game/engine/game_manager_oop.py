@@ -1,14 +1,14 @@
-# backend/poker_server/game/engine/game_manager_oop.py
+# poker_server/game/engine/game_manager_oop.py
 
 import logging
 from typing import Dict, Any, Optional, List
 
 # Ensure these imports exist:
-from backend.poker_server.models.user import User # Ensure this is your correct User model
-from backend.poker_server.game.engine.player_oop import Player # Ensure this is the updated Player file
-from backend.poker_server.game.engine.table_oop import Table
-from backend.poker_server.sql_services.db_manager import DBManager
-from backend.poker_server.game.engine.hand_evaluator_oop import HandEvaluator 
+from poker_server.models.user import User # Ensure this is your correct User model
+from poker_server.game.engine.player_oop import Player # Ensure this is the updated Player file
+from poker_server.game.engine.table_oop import Table
+from poker_server.sql_services.db_manager import DBManager
+from poker_server.game.engine.hand_evaluator_oop import HandEvaluator 
 
 
 logger = logging.getLogger(__name__)

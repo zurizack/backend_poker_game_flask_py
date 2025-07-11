@@ -1,11 +1,11 @@
 # poker_sever/game/routes/poker_tables.py
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from backend.poker_server.utils.permissions import admin_required
-from backend.poker_server import db
-from backend.poker_server.models.poker_table import PokerTable
+from poker_server.utils.permissions import admin_required
+from poker_server import db
+from poker_server.models.poker_table import PokerTable
 # from poker_server.game.services.table_service import get_or_create_table_state
-from backend.poker_server.sql_services.table_data import get_table_data_from_sql_db
+from poker_server.sql_services.table_data import get_table_data_from_sql_db
 
 # Create a Blueprint for game-related routes
 poker_tables_bp = Blueprint('poker_tables', __name__, url_prefix='/game')

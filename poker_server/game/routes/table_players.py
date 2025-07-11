@@ -2,9 +2,9 @@
 
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from backend.poker_server import db
-from backend.poker_server.models.table_player import TablePlayer
-from backend.poker_server.models.poker_table import PokerTable
+from poker_server import db
+from poker_server.models.table_player import TablePlayer
+from poker_server.models.poker_table import PokerTable
 # from poker_server.state.broadcast import broadcast_players_update
 
 

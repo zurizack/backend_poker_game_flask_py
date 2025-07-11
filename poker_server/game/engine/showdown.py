@@ -1,6 +1,6 @@
 # game/engine/showdown.py
 
-from backend.poker_server.utils.poker_hand_evaluator import evaluate_hand_strength
+from poker_server.utils.poker_hand_evaluator import evaluate_hand_strength
 # from poker_server.utils.poker_hand_evaluator import compare_hands # This line was commented out in original
 
 import logging

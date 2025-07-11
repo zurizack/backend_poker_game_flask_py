@@ -5,8 +5,8 @@ from typing import List, Dict, Any
 
 
 # ייבוא לקוח ה-Redis ופונקציות המפתחות המעודכנות
-from backend.poker_server.state.client import redis_client
-from backend.poker_server.state.keys import get_public_table_state_key
+from poker_server.state.client import redis_client
+from poker_server.state.keys import get_public_table_state_key
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO) # הגדר את רמת הלוגים שתרצה (DEBUG, INFO, WARNING, ERROR, CRITICAL)

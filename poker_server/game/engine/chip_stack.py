@@ -1,4 +1,4 @@
-# backend/poker_server/game/engine/chip_stack.py
+# poker_server/game/engine/chip_stack.py
 
 import logging
 

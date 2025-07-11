@@ -1,5 +1,5 @@
 # poker_server/models/table_player.py
-from backend.poker_server import db
+from poker_server import db
 
 class TablePlayer(db.Model):
     """

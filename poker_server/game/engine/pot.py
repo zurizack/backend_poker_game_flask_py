@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple, Optional, Any
-from backend.poker_server.game.engine.player_oop import Player 
-from backend.poker_server.game.engine.chip_stack import Chips 
+from poker_server.game.engine.player_oop import Player 
+from poker_server.game.engine.chip_stack import Chips 
 
 
 class Pot:

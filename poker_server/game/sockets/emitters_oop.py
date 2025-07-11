@@ -5,9 +5,9 @@ from flask_socketio import SocketIO, join_room
 # Import the classes you are working with
 # Important: Ensure these paths are correct.
 # If Table and Player files are in game.engine folders, this is correct.
-from backend.poker_server.game.engine.table_oop import Table
-from backend.poker_server.game.engine.player_oop import Player
-from backend.poker_server.game.engine.card_oop import Card # We will need this if we send cards
+from poker_server.game.engine.table_oop import Table
+from poker_server.game.engine.player_oop import Player
+from poker_server.game.engine.card_oop import Card # We will need this if we send cards
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO) # Info level logs

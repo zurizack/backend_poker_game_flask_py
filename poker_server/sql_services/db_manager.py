@@ -1,4 +1,4 @@
-# backend/poker_server/data/db_manager.py
+# poker_server/data/db_manager.py
 
 import logging
 from typing import Optional, Dict, Any, List

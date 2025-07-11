@@ -1,7 +1,7 @@
 # poker_server/sql_services/table_data.py
 
 from flask import jsonify
-from backend.poker_server.models.poker_table import PokerTable
+from poker_server.models.poker_table import PokerTable
 from typing import Optional, Dict, Any
 import logging
 

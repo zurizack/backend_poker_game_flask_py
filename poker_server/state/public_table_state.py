@@ -5,11 +5,11 @@ import logging
 from typing import Optional, Dict, Any
 
 # ייבוא לקוח ה-Redis ופונקציות המפתחות המעודכנות
-from backend.poker_server.state.client import redis_client
-from backend.poker_server.state.keys import get_public_table_state_key
-from backend.poker_server.sql_services.table_data import get_table_data_for_server 
-from backend.poker_server.state.keys import get_public_table_state_key
-from backend.poker_server.game.engine.table_oop import Table
+from poker_server.state.client import redis_client
+from poker_server.state.keys import get_public_table_state_key
+from poker_server.sql_services.table_data import get_table_data_for_server 
+from poker_server.state.keys import get_public_table_state_key
+from poker_server.game.engine.table_oop import Table
 
 
 logger = logging.getLogger(__name__)

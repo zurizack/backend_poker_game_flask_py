@@ -1,15 +1,15 @@
-# backend/poker_server/game/engine/table_oop.py
+# poker_server/game/engine/table_oop.py
 
 import logging
 from typing import Dict, Any, List, Optional
 # Ensure these imports exist:
-from backend.poker_server.game.engine.player_oop import Player # Ensure this is the updated Player file
-from backend.poker_server.game.engine.card_oop import Card 
-from backend.poker_server.game.engine.hand_evaluator_oop import HandEvaluator 
-from backend.poker_server.game.engine.pot import Pot # ✅ Correction: Changed to pot_oop
-from backend.poker_server.game.engine.betting_round import BettingRound, BettingRoundStatus 
-from backend.poker_server.game.engine.card_deck_oop import CardDeck # ✅ Correction: Changed to deck_oop
-from backend.poker_server.game.engine.player_hand import PlayerHandStatus, PlayerAction 
+from poker_server.game.engine.player_oop import Player # Ensure this is the updated Player file
+from poker_server.game.engine.card_oop import Card 
+from poker_server.game.engine.hand_evaluator_oop import HandEvaluator 
+from poker_server.game.engine.pot import Pot # ✅ Correction: Changed to pot_oop
+from poker_server.game.engine.betting_round import BettingRound, BettingRoundStatus 
+from poker_server.game.engine.card_deck_oop import CardDeck # ✅ Correction: Changed to deck_oop
+from poker_server.game.engine.player_hand import PlayerHandStatus, PlayerAction 
 import enum 
 
 logger = logging.getLogger(__name__)

@@ -1,5 +1,5 @@
 # poker_server/game/core/turn.py
-from backend.poker_server.game.core.utils import (
+from poker_server.game.core.utils import (
     get_active_players,
     get_next_seat_after,
     get_next_player_id

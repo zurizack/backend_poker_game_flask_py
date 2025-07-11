@@ -6,7 +6,7 @@ import logging
 
 # הגדרת נתיב כדי לאפשר ייבוא מהפרויקט
 # יש לוודא שהנתיב הזה מצביע לתיקייה הראשית של הפרויקט שלך
-# לדוגמה, אם הסקריפט הזה נמצא ב-backend/poker_server/scripts,
+# לדוגמה, אם הסקריפט הזה נמצא ב-poker_server/scripts,
 # אז התיקייה הראשית היא התיקייה שמעל backend.
 # ייתכן שתצטרך להתאים את הנתיב הזה לסביבת הפרויקט שלך.
 script_dir = os.path.dirname(__file__)
@@ -25,8 +25,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 try:
     # ייבוא ה-DBManager והמודלים הנדרשים
-    from backend.poker_server.sql_services.db_manager import DBManager
-    from backend.poker_server.models.user import User as ActualUser # ודא שזהו הייבוא הנכון למודל ה-User שלך
+    from poker_server.sql_services.db_manager import DBManager
+    from poker_server.models.user import User as ActualUser # ודא שזהו הייבוא הנכון למודל ה-User שלך
 except ImportError as e:
     logger.error(f"שגיאת ייבוא: ודא שנתיבי הייבוא נכונים ושאתה מריץ את הסקריפט מהמיקום הנכון. שגיאה: {e}")
     logger.error(f"נתיב חיפוש Python: {sys.path}")

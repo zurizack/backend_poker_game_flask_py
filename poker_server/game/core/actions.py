@@ -1,5 +1,5 @@
 # poker_server/game/core/action_logic.py
-from backend.poker_server.game.core.handlers import _deduct_chips_and_update_pot
+from poker_server.game.core.handlers import _deduct_chips_and_update_pot
 
 
 def apply_bet(state, player, amount):

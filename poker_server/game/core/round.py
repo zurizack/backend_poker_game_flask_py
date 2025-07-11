@@ -1,10 +1,10 @@
 # poker_server/game/core/round.py
 import logging
 import random
-from backend.poker_server.game.engine.card_deck import create_deck, shuffle,deal
-from backend.poker_server.game.core.handlers import _deduct_chips_and_update_pot
-from backend.poker_server.game.core.turn import assign_first_to_act
-from backend.poker_server.game.core.utils import (
+from poker_server.game.engine.card_deck import create_deck, shuffle,deal
+from poker_server.game.core.handlers import _deduct_chips_and_update_pot
+from poker_server.game.core.turn import assign_first_to_act
+from poker_server.game.core.utils import (
     get_active_players,
     get_next_seat_after,
 )
@@ -241,8 +241,8 @@ def deal_community_cards(state):
 
 def get_public_state(state, table_id):
 
-    from backend.poker_server import db
-    from backend.poker_server.models.poker_table import PokerTable
+    from poker_server import db
+    from poker_server.models.poker_table import PokerTable
 
     return {
 

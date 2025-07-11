@@ -1,15 +1,15 @@
-# backend/poker_server/game/sockets/handlers/player_take_a_seat_handler.py
+# poker_server/game/sockets/handlers/player_take_a_seat_handler.py
 
 import logging
 from typing import Dict, Any, Optional
 from flask_login import current_user 
 from flask_socketio import SocketIO, join_room, leave_room
 
-from backend.poker_server import game_manager_instance 
-from backend.poker_server.game.sockets.emitters_oop import PokerEmitters
-from backend.poker_server.game.engine.player_oop import Player 
-from backend.poker_server.game.engine.table_oop import Table 
-from backend.poker_server.models.user import User 
+from poker_server import game_manager_instance 
+from poker_server.game.sockets.emitters_oop import PokerEmitters
+from poker_server.game.engine.player_oop import Player 
+from poker_server.game.engine.table_oop import Table 
+from poker_server.models.user import User 
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,15 @@
 # poker_server/game/core/stages
-from backend.poker_server.game.core.utils import get_next_player_id, get_player_by_id
+from poker_server.game.core.utils import get_next_player_id, get_player_by_id
 import logging
-from backend.poker_server.game.engine.showdown import handle_showdown
-from backend.poker_server.game.core.round import (
+from poker_server.game.engine.showdown import handle_showdown
+from poker_server.game.core.round import (
     reset_round_state,
     update_stage_state,
     deal_community_cards,
     assign_first_to_act_postflop
 
 )
-from backend.poker_server.game.core.turn import assign_first_to_act
+from poker_server.game.core.turn import assign_first_to_act
 
 STAGES = ["pre_flop", "flop", "turn", "river", "showdown"]
 

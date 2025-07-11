@@ -1,7 +1,7 @@
 # poker_server/auth/routes.py
 from flask import Blueprint, request, jsonify
-from backend.poker_server.models.user import User
-from backend.poker_server import db
+from poker_server.models.user import User
+from poker_server import db
 from datetime import datetime
 from flask_login import login_user, logout_user, current_user
 

@@ -1,16 +1,16 @@
-# backend/poker_server/game/engine/player_oop.py
+# poker_server/game/engine/player_oop.py
 
 import logging
 import enum
 from typing import List, Optional, Dict, Any
 
 # Import existing classes
-from backend.poker_server.game.engine.card_oop import Card
-from backend.poker_server.models.user import User as ActualUser 
+from poker_server.game.engine.card_oop import Card
+from poker_server.models.user import User as ActualUser 
 
 # Import new/updated classes
-from backend.poker_server.game.engine.player_hand import PlayerHand, PlayerHandStatus, PlayerAction
-from backend.poker_server.game.engine.chip_stack import Chips 
+from poker_server.game.engine.player_hand import PlayerHand, PlayerHandStatus, PlayerAction
+from poker_server.game.engine.chip_stack import Chips 
 
 logger = logging.getLogger(__name__)
 
