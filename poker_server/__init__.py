@@ -64,6 +64,19 @@ def create_app():
         db.create_all() # Creates all tables for the defined models
         logging.info("Database tables created/updated successfully.")
 
+        logging.info("Attempting to test database table existence by fetching a user...")
+        try:
+            # ננסה לשלוף משתמש כלשהו. אם הטבלה לא קיימת, זה יזרוק שגיאה.
+            first_user = User.query.first()
+            if first_user:
+                logging.info(f"Test fetch successful: Found existing user (ID: {first_user.id}). Tables exist and contain data.")
+            else:
+                logging.info("Test fetch successful: No existing users found. Tables exist but are empty.")
+        except Exception as e:
+            logging.error(f"Error during test fetch from User table: {e}")
+            print(f"CRITICAL ERROR: Test fetch failed from User table: { {e} }", file=sys.stderr)
+            logging.error("This likely means the database tables were NOT created successfully.")
+
         # --- Initialize DBManager and GameManager ---
         # We will use the global variables
         global db_manager_instance 
