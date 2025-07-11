@@ -4,95 +4,95 @@ from backend.poker_server.game.engine.card_oop import Card
 
 class CardDeck:
     """
-    מחלקה שמייצגת חבילת קלפים סטנדרטית (52 קלפים) ומנהלת את פעולות הערבוב והחלוקה.
-    היא תומכת גם ביצירת חבילה חדשה וגם בשחזור מצב חבילה קיים.
+    A class that represents a standard deck of cards (52 cards) and manages shuffling and dealing operations.
+    It supports both creating a new deck and restoring an existing deck state.
     """
 
     def __init__(self, initial_cards: Optional[List[Card]] = None):
         """
-        קונסטרוקטור למחלקת CardDeck.
+        Constructor for the CardDeck class.
 
-        :param initial_cards: (אופציונלי) רשימה של אובייקטי Card.
-                              אם מסופק, החבילה תאותחל עם הקלפים הללו בסדר הנתון.
-                              אם None (ברירת מחדל), החבילה תאותחל כחבילה חדשה של 52 קלפים מעורבבים.
+        :param initial_cards: (Optional) A list of Card objects.
+                                If provided, the deck will be initialized with these cards in the given order.
+                                If None (default), the deck will be initialized as a new shuffled 52-card deck.
         """
         if initial_cards is None:
-            # אם לא סופקו קלפים ראשוניים, בנה חבילה חדשה וערבב אותה
+            # If no initial cards are provided, build a new deck and shuffle it
             self._cards: List[Card] = []
             self._initialize_deck()
             self.shuffle()
         else:
-            # אם סופקו קלפים ראשוניים (לצורך שחזור), השתמש בהם
-            # חשוב ליצור עותק כדי לא לשנות את הרשימה המקורית אם היא מגיעה מבחוץ
+            # If initial cards are provided (for restoration), use them
+            # It's important to create a copy to avoid modifying the original list if it comes from outside
             self._cards = list(initial_cards) 
 
     def _initialize_deck(self):
         """
-        פונקציית עזר פרטית ליצירת 52 קלפים סטנדרטיים ומסודרים.
+        Private helper function to create 52 standard, ordered cards.
         """
-        self._cards = [] # וודא שהרשימה ריקה לפני בנייה מחדש
+        self._cards = [] # Ensure the list is empty before rebuilding
         for suit in Card.SUITS:
             for rank in Card.RANKS:
                 self._cards.append(Card(rank, suit))
 
     def shuffle(self):
         """
-        מערבב את הקלפים בחבילה באופן רנדומלי.
+        Shuffles the cards in the deck randomly.
         """
         random.shuffle(self._cards)
 
     def deal_card(self) -> Card:
         """
-        שולף ומחזיר קלף אחד מראש החבילה.
-        (הקלף האחרון ברשימה נחשב "ראש" החבילה בפייתון לנוחות ה-pop).
+        Draws and returns one card from the top of the deck.
+        (The last card in the list is considered the "top" of the deck in Python for pop convenience).
 
-        :return: אובייקט Card.
-        :raises IndexError: אם החבילה ריקה.
+        :return: A Card object.
+        :raises IndexError: If the deck is empty.
         """
         if not self._cards:
-            raise IndexError("אין קלפים נותרים בחבילה.")
+            raise IndexError("No cards left in the deck.")
         return self._cards.pop()
 
     def num_cards_left(self) -> int:
         """
-        מחזירה את מספר הקלפים שנותרו בחבילה.
+        Returns the number of cards remaining in the deck.
         """
         return len(self._cards)
 
     def reset(self):
         """
-        מאפס את החבילה למצב ההתחלתי שלה: 52 קלפים חדשים ומעורבבים.
+        Resets the deck to its initial state: 52 new and shuffled cards.
         """
         self._initialize_deck()
         self.shuffle()
 
     def get_cards(self) -> List[Card]:
         """
-        מחזירה עותק של רשימת הקלפים הנוכחית בחבילה.
-        שימושית לשמירת מצב החבילה ושחזורה.
+        Returns a copy of the current list of cards in the deck.
+        Useful for saving and restoring the deck's state.
 
-        :return: רשימה של אובייקטי Card.
+        :return: A list of Card objects.
         """
-        return list(self._cards) # מחזיר עותק כדי למנוע שינוי ישיר מבחוץ
+        return list(self._cards) # Returns a copy to prevent direct modification from outside
 
     def __len__(self) -> int:
         """
-        מאפשר להשתמש בפונקציה המובנית len() על אובייקט CardDeck.
-        לדוגמה: len(my_deck).
+        Allows using the built-in len() function on a CardDeck object.
+        For example: len(my_deck).
         """
         return self.num_cards_left()
 
     def __str__(self) -> str:
         """
-        מחזירה ייצוג קריא של מצב החבילה.
+        Returns a readable representation of the deck's state.
         """
-        return f"חבילת קלפים עם {len(self)} קלפים שנותרו."
+        return f"Card deck with {len(self)} cards remaining."
 
     def __repr__(self) -> str:
         """
-        מחזירה ייצוג חד-משמעי של האובייקט, המשמש לדיבוג.
-        מציגה את מספר הקלפים ואת חמשת הקלפים העליונים (האחרונים ברשימה).
+        Returns an unambiguous representation of the object, used for debugging.
+        Shows the number of cards and the top five cards (the last ones in the list).
         """
-        # לצורך דיבוג, נציג גם את הקלפים שנותרו בחבילה.
-        # אזהרה: עבור חבילה מלאה, זה יכול להיות פלט ארוך.
+        # For debugging purposes, we will also show the cards remaining in the deck.
+        # Warning: For a full deck, this can be a long output.
         return f"CardDeck(cards_left={len(self)}, top_cards={[repr(card) for card in self._cards[-5:]]})"
