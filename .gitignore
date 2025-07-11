@@ -25,3 +25,7 @@ __pycache__/
 # Other temporary files
 *.tmp
 *.bak
+
+# Ignore specific files in the poker_server directory
+backend/poker_server/flash.py
+backend/poker_server/more_chips.py
