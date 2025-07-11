@@ -5,12 +5,11 @@ from flask_socketio import join_room
 from flask_login import current_user
 from flask import request
 from typing import Dict, Any
-from poker_server.game.sockets.emitters_oop import PokerEmitters
-from poker_server.game.sockets.handlers.join_table_handler import handle_join_table_request
-from poker_server.game.sockets.handlers.player_take_a_seat_handler import handle_player_take_a_seat_request
+from .emitters_oop import PokerEmitters
+from .handlers.join_table_handler import handle_join_table_request
+from .handlers.player_take_a_seat_handler import handle_player_take_a_seat_request
+from ... import game_manager_instance
 
-from poker_server import game_manager_instance
-from poker_server.game.sockets.emitters_oop import PokerEmitters
 
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
 # poker_server/models/poker_table.py
 
-from poker_server import db
+from .. import db
 
 class PokerTable(db.Model):
     """

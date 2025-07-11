@@ -1,13 +1,9 @@
 import logging
 from typing import Dict, Any, Optional, List
 from flask_socketio import SocketIO, join_room
-# Import SocketIO for type hinting
-# Import the classes you are working with
-# Important: Ensure these paths are correct.
-# If Table and Player files are in game.engine folders, this is correct.
-from poker_server.game.engine.table_oop import Table
-from poker_server.game.engine.player_oop import Player
-from poker_server.game.engine.card_oop import Card # We will need this if we send cards
+from ..engine.table_oop import Table
+from ..engine.player_oop import Player
+from ..engine.card_oop import Card # We will need this if we send cards
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO) # Info level logs

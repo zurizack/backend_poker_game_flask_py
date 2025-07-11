@@ -2,9 +2,9 @@ from typing import List, Dict, Optional, Tuple
 import enum
 
 # Import previous classes
-from poker_server.game.engine.player_oop import Player
-from poker_server.game.engine.pot import Pot # We will need Pot to transfer bets to it
-from poker_server.game.engine.player_hand import PlayerAction, PlayerHandStatus # For player statuses and actions
+from .player_oop import Player
+from .pot import Pot # We will need Pot to transfer bets to it
+from .player_hand import PlayerAction, PlayerHandStatus # For player statuses and actions
 
 
 class BettingRoundStatus(enum.Enum):

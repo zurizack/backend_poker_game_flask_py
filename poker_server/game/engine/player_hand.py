@@ -1,7 +1,7 @@
 import enum
 from typing import List, Optional
 
-from poker_server.game.engine.card_oop import Card # Ensure this is the correct import for the Card class
+from .card_oop import Card # Ensure this is the correct import for the Card class
 
 # Define Enum for player hand states
 class PlayerHandStatus(enum.Enum):

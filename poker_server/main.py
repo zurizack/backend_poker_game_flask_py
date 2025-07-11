@@ -23,7 +23,7 @@ load_dotenv(dotenv_path=os.path.join("poker_server", ".env"))
 # --- הסרנו את הייבוא והאתחול של SuperGameManager מכאן ---
 # server_manager_instance = SuperGameManager() # שורה זו נמחקה
 
-from poker_server import create_app, socketio # ייבוא create_app ו-socketio
+from . import create_app, socketio # ייבוא create_app ו-socketio
 
 app = create_app() # יצירת האפליקציה, וכעת גם GameManager מאותחל בתוכה
 

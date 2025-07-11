@@ -6,10 +6,10 @@ from flask_socketio import SocketIO, join_room, leave_room
 from flask_login import current_user
 
 # Import the global instance of game_manager_instance
-from poker_server import game_manager_instance 
+from .... import game_manager_instance 
 
-from poker_server.game.sockets.emitters_oop import PokerEmitters
-from poker_server.game.engine.player_oop import Player
+from ..emitters_oop import PokerEmitters
+from ...engine.player_oop import Player
 
 logger = logging.getLogger(__name__)
 

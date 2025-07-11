@@ -1,6 +1,6 @@
 import random
 from typing import List, Optional
-from poker_server.game.engine.card_oop import Card
+from .card_oop import Card
 
 class CardDeck:
     """

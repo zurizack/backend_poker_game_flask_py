@@ -5,12 +5,12 @@ import enum
 from typing import List, Optional, Dict, Any
 
 # Import existing classes
-from poker_server.game.engine.card_oop import Card
-from poker_server.models.user import User as ActualUser 
+from .card_oop import Card
+from ...models.user import User as ActualUser 
 
 # Import new/updated classes
-from poker_server.game.engine.player_hand import PlayerHand, PlayerHandStatus, PlayerAction
-from poker_server.game.engine.chip_stack import Chips 
+from .player_hand import PlayerHand, PlayerHandStatus, PlayerAction
+from .chip_stack import Chips 
 
 logger = logging.getLogger(__name__)
 

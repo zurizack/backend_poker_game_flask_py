@@ -4,7 +4,7 @@ from collections import Counter
 from itertools import combinations
 
 # Ensure you have imported Card, Suit, Rank correctly.
-from poker_server.game.engine.card_oop import Card
+from .card_oop import Card
 
 
 class HandRank(enum.Enum):
