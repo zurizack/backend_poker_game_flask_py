@@ -34,17 +34,17 @@ def register_handlers_oop(socketio):
         player_id = current_user.id
         logger.info(f"Authenticated user {player_id} (SID: {request.sid}) connected.")
 
-        # ✅ לוגיקה לטיפול בהתחברות מחדש של שחקן יושב
+        # ✅ Logic to handle re-connection of a seated player
         player_obj = game_manager_instance.get_player_by_user_id(player_id)
         if player_obj:
-            # עדכן את ה-socket_id של השחקן הקיים
+            # Update the socket_id of the existing player
             player_obj.socket_id = request.sid
             game_manager_instance.update_player_socket_id(player_id, request.sid)
-            game_manager_instance.mark_player_reconnected(player_id) # סמן כמחובר מחדש
+            game_manager_instance.mark_player_reconnected(player_id) # Mark as reconnected
 
             if player_obj.is_seated():
                 table_id = player_obj.table_id
-                join_room(str(table_id)) # צרף מחדש לחדר הסוקט
+                join_room(str(table_id)) # Rejoin the socket room
                 logger.info(f"Reconnected player {player_id} (SID: {request.sid}) rejoined table {table_id} SocketIO room.")
                 
                 table_state = game_manager_instance.get_table_state(table_id)
@@ -53,7 +53,7 @@ def register_handlers_oop(socketio):
                     PokerEmitters._emit('join_success', {'message': f"Already seated at table {table_id}."}, sid=request.sid)
                 else:
                     PokerEmitters.emit_error(request.sid, "Internal error: Table state not found for seated player on reconnect.")
-                return # סיים את הטיפול כאן
+                return # End handling here
 
         # **Very Important:**
         # Do not add lines like join_room here. This caused timing issues in the past.
@@ -73,24 +73,24 @@ def register_handlers_oop(socketio):
 
     @socketio.on("join_table")
     def on_join_table(data: Dict[str, Any]):
-        player_id = current_user.id # ✅ השתמש ב-int ישירות
+        player_id = current_user.id # ✅ Use int directly
         sid = request.sid # The SID of the current client
-        table_id_str = data.get('table_id') # קבל את ה-table_id מוקדם
+        table_id_str = data.get('table_id') # Get table_id early
 
         logger.info(f"SocketListener: Player {player_id} (SID: {sid}) requested to join table with data: {data}")
         
-        # ✅ לוגיקה לטיפול בשחקן שיושב כבר ב-join_table
+        # ✅ Logic to handle a player already seated in join_table
         player_obj = game_manager_instance.get_player_by_user_id(player_id)
         if player_obj and player_obj.is_seated() and player_obj.table_id == table_id_str:
             logger.info(f"Player {player_id} (SID: {sid}) is already seated at table {table_id_str}. Sending full state directly.")
-            join_room(table_id_str) # ודא שהם בחדר
+            join_room(table_id_str) # Ensure they are in the room
             table_state = game_manager_instance.get_table_state(table_id_str)
             if table_state:
                 PokerEmitters._emit('full_table_state', table_state, sid=sid)
                 PokerEmitters._emit('join_success', {'message': f"Already seated at table {table_id_str}."}, sid=sid)
             else:
                 PokerEmitters.emit_error(sid, "Internal error: Table state not found for seated player.")
-            return # סיים את הטיפול כאן
+            return # End handling here
 
         # Simply call the logic function and pass it the data
         # The logic function will return the table_id if the join was successful, otherwise None
@@ -112,7 +112,7 @@ def register_handlers_oop(socketio):
             return # Or send an appropriate error message
 
         # player_id and sid come directly from the Socket.IO session/request
-        player_id = current_user.id # ✅ השתמש ב-int ישירות
+        player_id = current_user.id # ✅ Use int directly
         sid = request.sid 
 
         logger.info(f"SocketListener (Listener): Player {player_id} (SID: {sid}) requested to take a seat with data: {data}")
