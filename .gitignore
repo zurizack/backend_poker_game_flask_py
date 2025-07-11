@@ -1,0 +1,27 @@
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Byte-code files
+*.pyc
+__pycache__/
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Other temporary files
+*.tmp
+*.bak
