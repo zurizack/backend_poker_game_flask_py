@@ -1,23 +1,24 @@
-# poker_server/config/settings.py
-
 import os
 
 # Get the absolute path of the current directory (i.e., the config folder)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# Name of the SQLite database file
-DB_NAME = 'poker_game.db'
-
-# Construct the full SQLite URI; this places the database one level above the config folder
-SQLALCHEMY_DATABASE_URI = f'sqlite:///{os.path.join(BASE_DIR, "..", DB_NAME)}'
+# --- שינוי עבור בסיס נתונים ---
+# בייצור (Render), נשתמש במשתנה הסביבה DATABASE_URL שמסופק על ידי Render.
+# בפיתוח מקומי, נמשיך להשתמש ב-SQLite.
+# חשוב: אם אתה עובר ל-PostgreSQL מקומי בפיתוח, שנה את ברירת המחדל בהתאם.
+SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(BASE_DIR, "..", "poker_game.db")}')
 
 # Disable SQLAlchemy's event system for tracking object modifications
 # This saves system resources and is recommended unless events are needed
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# Secret key used for session signing, CSRF protection, and other security features
-# In production, this should be a long, unpredictable, and unique value
-SECRET_KEY = 'your_secret_key_here'
+# --- שינוי עבור SECRET_KEY ---
+# בייצור, SECRET_KEY חייב להגיע ממשתנה סביבה.
+# לעולם אל תשים מפתח סודי ישירות בקוד בייצור!
+# עבור פיתוח מקומי, אתה יכול להגדיר אותו בקובץ .env או להשתמש בערך ברירת מחדל כלשהו,
+# אבל ב-Render הוא יגיע ממשתנה הסביבה שתגדיר.
+SECRET_KEY = os.getenv('SECRET_KEY', 'a_very_secret_key_for_development_only_replace_in_production')
 
 # SESSION / COOKIE CONFIGURATION
 # These settings are important for handling login sessions across different origins
@@ -27,7 +28,9 @@ SESSION_COOKIE_SAMESITE = "None"
 
 # Ensures cookies are only sent over HTTPS connections
 # Set to False in development (HTTP), True in production (HTTPS)
-SESSION_COOKIE_SECURE = True
+# בייצור (Render), זה צריך להיות True.
+# בפיתוח מקומי (HTTP), זה צריך להיות False.
+SESSION_COOKIE_SECURE = os.getenv('FLASK_ENV') == 'production' # או כל משתנה סביבה אחר שאתה משתמש בו כדי לזהות ייצור
 
 # Prevents JavaScript from accessing session cookies (recommended for security)
 SESSION_COOKIE_HTTPONLY = True
