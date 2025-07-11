@@ -4,6 +4,7 @@ from ..models.user import User
 from .. import db
 from datetime import datetime
 from flask_login import login_user, logout_user, current_user
+import sys
 
 
 # Create a Blueprint for authentication routes, prefixing all with /auth
@@ -60,35 +61,50 @@ def register():
 # Route to log in an existing user
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    print(">> Headers:", request.headers)
-    print(">> Content-Type:", request.content_type)
-    print(">> Raw body:", request.data)
-    print(">> JSON body:", request.get_json(silent=True))
-    print(">> Form body:", request.form)
-    data = request.get_json()  # Parse incoming JSON request body
+    print("DEBUG: /auth/login endpoint hit.", file=sys.stderr)
+    print(">> Headers:", request.headers, file=sys.stderr)
+    print(">> Content-Type:", request.content_type, file=sys.stderr)
+    print(">> Raw body:", request.data, file=sys.stderr)
+    
+    data = request.get_json(silent=True) # השתמש ב-silent=True כדי למנוע שגיאה אם הבקשה אינה JSON
+    print(">> JSON body (parsed):", data, file=sys.stderr)
+    print(">> Form body:", request.form, file=sys.stderr)
 
     # Extract login credentials from the request data
-    email = data.get('email')
-    nickname = data.get('nickname')
-    password = data.get('password')
+    email = data.get('email') if data else None
+    nickname = data.get('nickname') if data else None
+    password = data.get('password') if data else None
+
+    print(f"DEBUG: Received email: {email}, nickname: {nickname}, password present: {bool(password)}", file=sys.stderr)
 
     # Ensure password and either email or nickname is provided
     if not password or (not email and not nickname):
+        print("DEBUG: Missing login credentials.", file=sys.stderr)
         return jsonify({'error': 'Missing login credentials'}), 400
 
     user = None
     # Attempt to find user by email if provided
     if email:
         user = User.query.filter_by(email=email).first()
+        print(f"DEBUG: User found by email: {user.email if user else 'None'}", file=sys.stderr)
     # Otherwise, try to find by nickname
     elif nickname:
         user = User.query.filter_by(nickname=nickname).first()
+        print(f"DEBUG: User found by nickname: {user.nickname if user else 'None'}", file=sys.stderr)
 
     # Check if user exists and if password matches
-    if user is None or not user.check_password(password):
+    if user is None:
+        print("DEBUG: User not found.", file=sys.stderr)
+        return jsonify({'error': 'Invalid email/nickname or password'}), 401
+    
+    if not user.check_password(password):
+        print("DEBUG: Password check failed.", file=sys.stderr)
         return jsonify({'error': 'Invalid email/nickname or password'}), 401
 
+    print(f"DEBUG: User {user.nickname} authenticated successfully. Attempting login_user.", file=sys.stderr)
     login_user(user)  # Log in the user via Flask-Login
+    print("DEBUG: login_user called successfully.", file=sys.stderr)
+
     return jsonify({
         'message': 'Logged in successfully',
         'user': {
@@ -97,7 +113,6 @@ def login():
             'is_admin': user.is_admin
         }
     })
-
 
 
 # Route to log out the current user

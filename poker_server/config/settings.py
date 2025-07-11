@@ -25,12 +25,16 @@ SECRET_KEY = os.getenv('SECRET_KEY', '01d3fe32ba6bfebd9bd08b56d1220cb9a5735d9be6
 
 # Allows cookies to be sent with cross-site requests
 SESSION_COOKIE_SAMESITE = "None"
+# SESSION_COOKIE_SAMESITE = "Lax" # ✅ שינוי זמני לדיבוג מקומי
 
 # Ensures cookies are only sent over HTTPS connections
 # Set to False in development (HTTP), True in production (HTTPS)
 # בייצור (Render), זה צריך להיות True.
 # בפיתוח מקומי (HTTP), זה צריך להיות False.
+
+
 SESSION_COOKIE_SECURE = os.getenv('FLASK_ENV') == 'production' # או כל משתנה סביבה אחר שאתה משתמש בו כדי לזהות ייצור
+# SESSION_COOKIE_SECURE = False 
 
 # Prevents JavaScript from accessing session cookies (recommended for security)
 SESSION_COOKIE_HTTPONLY = True

@@ -1,9 +1,9 @@
 # poker_server/__init__.py
 from typing import Optional, Dict, Any, List
 from flask import Flask
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from flask_cors import CORS
 from flask_socketio import SocketIO
 import logging # Import logging
 import os
@@ -46,6 +46,8 @@ def create_app():
 
     app.config.from_pyfile('config/settings.py')  # Loads configuration from an external file
 
+    CORS(app, supports_credentials=True, origins=allowed_origins)
+
     # Bind SQLAlchemy and LoginManager instances to this app
     db.init_app(app)
     login_manager.init_app(app)
@@ -87,7 +89,7 @@ def create_app():
         # Can store it on the app object for convenient future access
         app.db_manager = db_manager_instance 
         logging.info("DBManager initialized successfully.") # Log for DBManager
-
+        
         # ✅ Step 2: Create an instance of GameManager and pass the DBManager instance we created
         game_manager_instance = GameManager(db_manager_instance) 
         # Can store it on the app object for convenient future access
