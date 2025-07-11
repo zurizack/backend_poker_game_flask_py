@@ -14,7 +14,7 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 
 # Initialize SocketIO (without app context here)
-socketio = SocketIO(cors_allowed_origins="http://localhost:3000", manage_session=False, async_mode='gevent')
+socketio = SocketIO(cors_allowed_origins="https://frontend-poker-game.onrender.com", manage_session=False, async_mode='gevent')
 
 # --- Import GameManager and DBManager ---
 # Ensure these paths are correct!
