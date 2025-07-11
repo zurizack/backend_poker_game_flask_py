@@ -94,7 +94,7 @@ def login():
         'user': {
             'user_id': user.id,
             'username': user.nickname,
-            'is_admin': user.is_admin  # אם יש שדה כזה
+            'is_admin': user.is_admin
         }
     })
 
