@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 
 def handle_player_take_a_seat_request(socketio: SocketIO, player_id: int, sid: str, data: Dict[str, Any]) -> Optional[int]:
     """
-    מטפל בבקשת שחקן לתפוס מקום בשולחן.
-    :param socketio: מופע ה-SocketIO.
-    :param player_id: ה-ID של השחקן (מגיע מהאירוע, אמור להיות זהה ל-current_user.id).
-    :param sid: ה-Socket ID של השחקן.
-    :param data: מילון המכיל 'table_id', 'seat' ו-'buy_in_amount'.
-    :return: ה-ID של השולחן אם ההושבה הצליחה, אחרת None.
+    Handles a player's request to take a seat at a table.
+    :param socketio: The SocketIO instance.
+    :param player_id: The player's ID (comes from the event, should be identical to current_user.id).
+    :param sid: The player's Socket ID.
+    :param data: A dictionary containing 'table_id', 'seat', and 'buy_in_amount'.
+    :return: The ID of the table if seating was successful, otherwise None.
     """
     logger.info(f"Handler received seat request: Player ID {player_id}, Table ID {data.get('table_id')}, Seat: {data.get('seat')}, Buy-in: {data.get('buy_in_amount')}.")
 
@@ -58,15 +58,16 @@ def handle_player_take_a_seat_request(socketio: SocketIO, player_id: int, sid: s
         logger.error(f"Could not get or create player object for authenticated user {current_user.id} (SID: {sid}) in take seat handler.")
         return None
 
-    # ✅ קריאה למתודה החדשה ב-GameManager
+    # ✅ Call the new method in GameManager
     success = game_manager_instance.add_player_to_table_as_player(player_obj.user_id, table_id, buy_in_amount, seat_number)
 
     if success:
-        PokerEmitters._emit('seat_success', {'message': f"Successfully took seat {seat_number} at table {table_id}."}, sid=sid)
-        # שלח את מצב השולחן המעודכן לכל השחקנים בשולחן
+        PokerEmitters._emit('seat_success', {'message': f"Successfully took seat {seat_number} at table {table_id}."}, room=sid) # Changed sid=sid to room=sid
+        # Send the updated table state to all players at the table
         table = game_manager_instance.get_table_by_id(table_id)
         if table:
-            PokerEmitters.emit_full_table_state(sid ,table, requesting_player_id=player_obj.user_id) # העבר את ה-ID של השחקן המבקש
+            # Emit to the room (all players and viewers at the table)
+            PokerEmitters.emit_full_table_state(table_id, table, requesting_player_id=player_obj.user_id) 
             logger.info(f"Player {player_id} successfully took seat {seat_number} on table {table_id}. Table state broadcasted.")
             return int(table_id) 
         else:
