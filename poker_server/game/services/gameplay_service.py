@@ -30,7 +30,6 @@ def apply_player_action_logic(state, player_id, action, amount=None):
     if not action_func:
         raise ValueError("Unsupported action")
 
-    # הפתרון המהיר: העברת amount רק לפעולות שדורשות אותו
     if action in {"bet", "raise"}:
         action_func(state, player, amount)
     else:

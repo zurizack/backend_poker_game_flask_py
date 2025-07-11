@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional
 from flask_socketio import SocketIO, join_room, leave_room
 from flask_login import current_user
 
-# ייבוא המופע הגלובלי של game_manager_instance
+# Import the global instance of game_manager_instance
 from backend.poker_server import game_manager_instance 
 
 from backend.poker_server.game.sockets.emitters_oop import PokerEmitters
@@ -13,41 +13,41 @@ from backend.poker_server.game.engine.player_oop import Player
 
 logger = logging.getLogger(__name__)
 
-# חתימת הפונקציה כפי שציינת: game_manager אינו פרמטר
+# Function signature as you specified: game_manager is not a parameter
 def handle_join_table_request(socketio: SocketIO, player_id: int, sid: str, data: Dict[str, Any]) -> Optional[str]:
     """
-    מטפל בבקשת שחקן להצטרף לשולחן כצופה.
-    :param socketio: מופע ה-SocketIO.
-    :param player_id: ה-ID של השחקן (מגיע מ-current_user.id).
-    :param sid: ה-Socket ID של השחקן.
-    :param data: מילון המכיל 'table_id'.
-    :return: ה-ID של השולחן שהשחקן הצטרף אליו בהצלחה, אחרת None.
+    Handles a player's request to join a table as a viewer.
+    :param socketio: The SocketIO instance.
+    :param player_id: The player's ID (comes from current_user.id).
+    :param sid: The player's Socket ID.
+    :param data: A dictionary containing 'table_id'.
+    :return: The ID of the table the player successfully joined, otherwise None.
     """
     table_id_str = data.get('table_id')
 
     logger.info(f"Handler received join table request: Player ID {player_id}, Table ID: {table_id_str}.")
 
-    # 1. ודא שהנתונים החיוניים קיימים
+    # 1. Ensure essential data exists
     if not table_id_str:
         PokerEmitters.emit_error(sid, "Missing table ID for join table request.")
         logger.error(f"Join table request from SID {sid} missing table_id.")
         return None
 
-    table_id = str(table_id_str) # ודא שזה סטרינג
+    table_id = str(table_id_str) # Ensure it's a string
 
     try:
-        # 2. ודא שהמשתמש מאומת ועדכן את אובייקט ה-Player ב-GameManager
+        # 2. Ensure the user is authenticated and update the Player object in GameManager
         if not current_user.is_authenticated:
             PokerEmitters.emit_error(sid, "Authentication required to join a table.")
             logger.error(f"Unauthenticated user (SID: {sid}) tried to join a table.")
             return None
         
-        # ודא שה-player_id שהגיע מהאירוע תואם ל-ID של המשתמש המאומת.
+        # Ensure the player_id from the event matches the authenticated user's ID.
         if player_id != current_user.id:
             logger.warning(f"Player ID mismatch in join table request: event {player_id}, current_user {current_user.id}. Using current_user.id.")
-            player_id = current_user.id # ודא עקביות
+            player_id = current_user.id # Ensure consistency
 
-        # השתמש במופע הגלובלי שיובא
+        # Use the globally imported instance
         player_obj: Optional[Player] = game_manager_instance.register_or_update_player_connection(current_user, sid)
         
         if not player_obj:
@@ -55,27 +55,27 @@ def handle_join_table_request(socketio: SocketIO, player_id: int, sid: str, data
             logger.error(f"Could not get or create player object for authenticated user {current_user.id} (SID: {sid}) in join table handler.")
             return None
 
-        # 3. נסה לצרף את השחקן (כצופה) לשולחן באמצעות GameManager
-        # ✅ קריאה למתודה החדשה שתטפל בהוספת צופה ב-GameManager
+        # 3. Try to add the player (as a viewer) to the table using GameManager
+        # ✅ Call the new method to handle adding a viewer in GameManager
         success = game_manager_instance.add_player_to_table_as_viewer(player_obj.user_id, table_id) 
 
         if success:
-            join_room(table_id) # צרף את ה-socket לחדר הספציפי של השולחן
+            join_room(table_id) # Join the socket to the specific table room
             logger.info(f"Player {player_id} (SID: {sid}) successfully joined table {table_id} as a viewer.")
             
-            # 4. שלח את מצב השולחן המעודכן ללקוח
-            # ✅ קריאה למתודה החדשה שתחזיר את מצב השולחן המלא (כמילון)
+            # 4. Send the updated table state to the client
+            # ✅ Call the new method that will return the full table state (as a dictionary)
             table_state = game_manager_instance.get_table_state(table_id) 
             if table_state:
-                # ✅ שימוש ב-PokerEmitters._emit עם שם אירוע מפורש
-                PokerEmitters._emit('full_table_state', table_state, sid=sid) 
+                # ✅ Use PokerEmitters._emit with an explicit event name
+                PokerEmitters._emit('full_table_state', table_state, room=sid) # Changed sid=sid to room=sid to emit only to the specific client
             else:
                 logger.error(f"Table {table_id} not found after player {player_id} joined. This shouldn't happen.")
                 PokerEmitters.emit_error(sid, "Internal error: Table state not found.")
-                return None # החזר None אם מצב השולחן לא נמצא
+                return None # Return None if table state not found
 
-            # ✅ שימוש ב-PokerEmitters._emit עם שם אירוע מפורש
-            PokerEmitters._emit('join_success', {'message': f"Successfully joined table {table_id}."}, sid=sid)
+            # ✅ Use PokerEmitters._emit with an explicit event name
+            PokerEmitters._emit('join_success', {'message': f"Successfully joined table {table_id}."}, room=sid) # Changed sid=sid to room=sid
             return table_id
         else:
             PokerEmitters.emit_error(sid, "Could not join the requested table. It might not exist or another error occurred.")
@@ -86,4 +86,3 @@ def handle_join_table_request(socketio: SocketIO, player_id: int, sid: str, data
         logger.exception(f"Error handling join table request for player {player_id} (SID: {sid}, Data: {data}): {e}")
         PokerEmitters.emit_error(sid, "An unexpected error occurred while joining the table.")
         return None
-
