@@ -18,7 +18,7 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(50), nullable=False)   # User's last name, required
     email = db.Column(db.String(120), unique=True, nullable=False)  # User's email, unique and required
     nickname = db.Column(db.String(50), unique=True, nullable=False)  # Unique user nickname, required
-    password_hash = db.Column(db.String(128), nullable=False)  # Hashed password, required
+    password_hash = db.Column(db.String(256), nullable=False)  # Hashed password, required
     birthdate = db.Column(db.Date, nullable=True)  # Optional birthdate field
     chips = db.Column(db.Float, default=10000.0)  # Default chips assigned to user (e.g., poker chips)
     is_admin = db.Column(db.Boolean, default=False)  # Flag to mark admin users, default is False
