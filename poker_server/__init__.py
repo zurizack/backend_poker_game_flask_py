@@ -17,12 +17,13 @@ login_manager = LoginManager()
 allowed_origins = os.getenv('CORS_ALLOWED_ORIGIN', 'http://localhost:3000')
 
 # Initialize SocketIO (without app context here)
-socketio = SocketIO(cors_allowed_origins=allowed_origins, manage_session=False, async_mode='gevent')
+socketio = SocketIO()
+# socketio = SocketIO(cors_allowed_origins=allowed_origins, manage_session=False, async_mode='gevent')
 
 # --- Import GameManager and DBManager ---
 # Ensure these paths are correct!
-from poker_server.sql_services.db_manager import DBManager
-from poker_server.game.engine.game_manager_oop import GameManager 
+from .sql_services.db_manager import DBManager
+from .game.engine.game_manager_oop import GameManager 
 
 # --- Global variable to store GameManager instance ---
 # This will be the single instance of GameManager accessible to all parts of the application.
@@ -45,13 +46,13 @@ def create_app():
 
     app.config.from_pyfile('config/settings.py')  # Loads configuration from an external file
 
-    # Enable CORS with credentials support for the frontend origin
-    CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
-
     # Bind SQLAlchemy and LoginManager instances to this app
     db.init_app(app)
     login_manager.init_app(app)
-    socketio.init_app(app)
+
+    socketio.init_app(app, cors_allowed_origins=allowed_origins, manage_session=False, async_mode='gevent')
+
+    # socketio.init_app(app)
 
     # --- Create Database Tables ---
     with app.app_context():
@@ -117,10 +118,10 @@ def create_app():
     register_game_blueprints(app) # Call the function that registers game Blueprints
 
     # --- Initialize SocketIO Handlers and Emitters ---
-    from poker_server.game.sockets.emitters_oop import PokerEmitters
+    from .game.sockets.emitters_oop import PokerEmitters
     PokerEmitters.initialize(socketio) # Ensure PokerEmitters receives socketio
 
-    from poker_server.game.sockets import register_socket_handlers
+    from .game.sockets import register_socket_handlers
     register_socket_handlers(socketio) # Ensure register_socket_handlers receives socketio
 
     return app
