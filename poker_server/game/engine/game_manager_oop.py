@@ -3,9 +3,9 @@
 import logging
 from typing import Dict, Any, Optional, List
 
-# וודא שהייבואים האלה קיימים:
-from backend.poker_server.models.user import User # ודא שזהו מודל ה-User הנכון שלך
-from backend.poker_server.game.engine.player_oop import Player # ודא שזהו קובץ ה-Player המעודכן
+# Ensure these imports exist:
+from backend.poker_server.models.user import User # Ensure this is your correct User model
+from backend.poker_server.game.engine.player_oop import Player # Ensure this is the updated Player file
 from backend.poker_server.game.engine.table_oop import Table
 from backend.poker_server.sql_services.db_manager import DBManager
 from backend.poker_server.game.engine.hand_evaluator_oop import HandEvaluator 
@@ -27,13 +27,13 @@ class GameManager:
 
     def _load_existing_tables(self):
         poker_tables_data = self._db_manager.get_all_poker_tables() 
-        self.logger.info(f"נשלפו {len(poker_tables_data)} שולחנות פוקר מבסיס הנתונים.")
+        self.logger.info(f"Retrieved {len(poker_tables_data)} poker tables from the database.")
 
         if poker_tables_data:
-            self.logger.info(f"טוען {len(poker_tables_data)} שולחנות קיימים מבסיס הנתונים...")
+            self.logger.info(f"Loading {len(poker_tables_data)} existing tables from the database...")
             for table_data in poker_tables_data:
                 table_id = str(table_data['id'])
-                table_name = table_data['name'] # שם השולחן
+                table_name = table_data['name'] # Table name
                 max_players = table_data['max_players']
                 small_blind = table_data['small_blind']
                 big_blind = table_data['big_blind']
@@ -47,29 +47,29 @@ class GameManager:
                     hand_evaluator=self._hand_evaluator
                 )
                 self._tables[table_id] = poker_table
-                print(f"שולחן '{table_name}' (ID: {table_id}) נוצר.")
+                print(f"Table '{table_name}' (ID: {table_id}) created.")
         else:
-            self.logger.info("לא נמצאו שולחנות פוקר קיימים בבסיס הנתונים.")
+            self.logger.info("No existing poker tables found in the database.")
 
     def get_table_by_id(self, table_id: str) -> Optional[Table]:
         table = self._tables.get(table_id)
         if table:
-            self.logger.debug(f"שולחן {table_id} נמצא.")
+            self.logger.debug(f"Table {table_id} found.")
         else:
-            self.logger.warning(f"שולחן {table_id} לא נמצא.")
+            self.logger.warning(f"Table {table_id} not found.")
         return table
 
     def get_player_by_id(self, player_id: int) -> Optional[Player]:
-        """מחזירה אובייקט Player לפי ה-ID שלו."""
+        """Returns a Player object by its ID."""
         return self._connected_players.get(player_id)
 
     def get_player_by_user_id(self, user_id: int) -> Optional[Player]:
-        """מחזירה אובייקט Player לפי ה-user_id שלו."""
+        """Returns a Player object by its user_id."""
         return self._connected_players.get(user_id)
 
     def get_player_id_by_socket_id(self, sid: str) -> Optional[int]:
         """
-        מחזירה את ה-user_id של שחקן לפי ה-socket_id שלו.
+        Returns the user_id of a player by their socket_id.
         """
         for player_id, player_obj in self._connected_players.items():
             if player_obj.socket_id == sid:
@@ -77,7 +77,7 @@ class GameManager:
         return None
 
     def update_player_socket_id(self, user_id: int, new_sid: str):
-        """מעדכן את ה-socket_id של שחקן קיים."""
+        """Updates the socket_id of an existing player."""
         player = self.get_player_by_user_id(user_id)
         if player:
             player.socket_id = new_sid
@@ -86,7 +86,7 @@ class GameManager:
             self.logger.warning(f"Cannot update socket ID for non-existent player {user_id}.")
 
     def mark_player_reconnected(self, player_id: int):
-        """מסמן שחקן כמחובר מחדש (לוגיקה עתידית לטיפול בניתוקים זמניים)."""
+        """Marks a player as reconnected (future logic for handling temporary disconnections)."""
         player = self.get_player_by_user_id(player_id)
         if player:
             self.logger.info(f"Player {player_id} marked as reconnected.")
@@ -94,20 +94,19 @@ class GameManager:
             self.logger.warning(f"Cannot mark non-existent player {player_id} as reconnected.")
 
     def mark_player_disconnected(self, player_id: int):
-        """מסמן שחקן כמנותק (לוגיקה עתידית לטיפול בניתוקים זמניים וטיימרים)."""
+        """Marks a player as disconnected (future logic for handling temporary disconnections and timers)."""
         player = self.get_player_by_user_id(player_id)
         if player:
             self.logger.info(f"Player {player_id} marked as disconnected.")
         else:
             self.logger.warning(f"Cannot mark non-existent player {player_id} as disconnected.")
 
-    # ✅ מתודה חדשה: צירוף שחקן לשולחן כצופה
     def add_player_to_table_as_viewer(self, player_id: int, table_id: str) -> bool:
         """
-        מוסיף שחקן לשולחן כצופה.
-        :param player_id: ה-ID של השחקן.
-        :param table_id: ה-ID של השולחן.
-        :return: True אם הצופה נוסף בהצלחה, False אחרת.
+        Adds a player to a table as a viewer.
+        :param player_id: The player's ID.
+        :param table_id: The table's ID.
+        :return: True if the viewer was successfully added, False otherwise.
         """
         player_obj = self.get_player_by_user_id(player_id)
         if not player_obj:
@@ -119,15 +118,15 @@ class GameManager:
             self.logger.warning(f"Cannot add viewer: Table {table_id} not found.")
             return False
         
-        # ✅ בדיקה: אם השחקן כבר יושב בשולחן זה, הוא לא יכול להיות צופה בו במקביל
+        # ✅ Check: If the player is already seated at this table, they cannot also be a viewer.
         if player_obj.is_seated_at_table(table_id):
             self.logger.warning(f"Player {player_obj.username} (ID: {player_id}) is already seated at table {table_id}. Cannot add as viewer to the same table.")
             return False
 
-        # קריאה למתודה בתוך אובייקט ה-Table
+        # Call the method within the Table object
         success = table.add_viewer(player_obj) 
         if success:
-            # ✅ עדכון מצב הצפייה של השחקן באובייקט Player
+            # ✅ Update the player's viewing status in the Player object
             player_obj.add_viewing_table(table_id) 
             self.logger.info(f"Player {player_id} added as viewer to table {table_id}.")
             return True
@@ -135,15 +134,14 @@ class GameManager:
             self.logger.warning(f"Failed to add player {player_id} as viewer to table {table_id}.")
             return False
 
-    # ✅ מתודה חדשה: צירוף שחקן לשולחן כשחקן יושב (לשעבר join_table)
     def add_player_to_table_as_player(self, player_id: int, table_id: str, buy_in_amount: float, seat_number: int) -> bool:
         """
-        מטפל בלוגיקה של שחקן שלוקח מקום בשולחן.
-        - מוודא שהשחקן קיים במערכת (מחובר).
-        - מוודא שהשולחן והמושב קיימים ותפוסים.
-        - מוודא שלשחקן יש מספיק צ'יפים לקנייה.
-        - מושיב את השחקן במושב.
-        - מעדכן את מצב השולחן.
+        Handles the logic for a player taking a seat at a table.
+        - Ensures the player exists in the system (connected).
+        - Ensures the table and seat exist and are available.
+        - Ensures the player has enough chips for the buy-in.
+        - Seats the player at the seat.
+        - Updates the table state.
         """
         self.logger.info(f"Player {player_id} attempting to join table {table_id} at seat {seat_number} with buy-in {buy_in_amount}.")
 
@@ -157,32 +155,32 @@ class GameManager:
             self.logger.warning(f"Failed to seat player: Table {table_id} not found.")
             return False
 
-        # ✅ אין צורך לבדוק כאן אם השחקן יושב בשולחן אחר.
-        # ההנחה היא ש-player_obj יכול לשבת בכמה שולחנות.
-        # הבדיקה אם המושב בשולחן הנוכחי פנוי תתבצע בתוך table.take_seat.
-        # הבדיקה אם השחקן כבר יושב *באותו שולחן* תתבצע בתוך table.take_seat.
+        # ✅ No need to check here if the player is seated at another table.
+        # The assumption is that player_obj can be seated at multiple tables.
+        # The check if the seat at the current table is free will be done inside table.take_seat.
+        # The check if the player is already seated at *the same table* will be done inside table.take_seat.
 
 
-        # 1. ודא שלשחקן יש מספיק צ'יפים בחשבון הכללי
-        # (הערה: player_obj.get_user_total_chips() מחזיר את היתרה הכללית של המשתמש מה-DB)
+        # 1. Ensure the player has enough chips in their total account
+        # (Note: player_obj.get_user_total_chips() returns the user's total balance from the DB)
         if player_obj.get_user_total_chips() < buy_in_amount: 
             self.logger.warning(f"Player {player_id} tried to buy in with {buy_in_amount} but only has {player_obj.get_user_total_chips()} chips in total.")
             return False 
 
-        # 2. נסה להושיב את השחקן בשולחן
-        # ✅ ההנחה היא ש-table.take_seat מטפלת ב:
-        #    א. בדיקה אם המושב פנוי.
-        #    ב. בדיקה אם השחקן כבר יושב במושב זה בשולחן זה (ומניעה).
-        #    ג. הסרת השחקן מ-table._viewers אם הוא היה צופה באותו שולחן.
-        #    ד. קריאה ל-player_obj.perform_buy_in(self.table_id, buy_in_amount)
-        #    ה. קריאה ל-player_obj.set_seated_data_for_table(self.table_id, seat_number)
-        #    ו. הוספת השחקן ל-table._players ול-table._seats.
+        # 2. Try to seat the player at the table
+        # ✅ The assumption is that table.take_seat handles:
+        #    a. Checking if the seat is free.
+        #    b. Checking if the player is already seated at this seat at this table (and preventing).
+        #    c. Removing the player from table._viewers if they were a viewer at the same table.
+        #    d. Calling player_obj.perform_buy_in(self.table_id, buy_in_amount)
+        #    e. Calling player_obj.set_seated_data_for_table(self.table_id, seat_number)
+        #    f. Adding the player to table._players and table._seats.
         success = table.take_seat(player_obj, seat_number, buy_in_amount)
 
         if success:
-            # 3. עדכון בסיס הנתונים (צמצום צ'יפים לשחקן) יבוצע ב-SocketIO handler
-            #    (ה-handler יבצע session.commit() על אובייקט ה-User ששונה).
-            # ❌ שורה זו הוסרה! היא הגורם לבעיה של עדכון כפול ואיפוס צ'יפים.
+            # 3. Database update (reducing player chips) will be performed in the SocketIO handler
+            #    (the handler will perform session.commit() on the modified User object).
+            # ❌ This line was removed! It was causing the double update and chip reset issue.
             # self._db_manager.update_user_chips(player_id, player_obj.get_user_total_chips()) 
 
             self.logger.info(f"Player {player_id} successfully took seat {seat_number} on table {table_id} with {buy_in_amount} buy-in.")
@@ -191,12 +189,11 @@ class GameManager:
             self.logger.warning(f"Failed to seat player {player_id} at table {table_id}, seat {seat_number}.")
             return False
 
-    # ✅ מתודה חדשה: קבלת מצב שולחן מלא (כמילון)
     def get_table_state(self, table_id: str) -> Optional[Dict[str, Any]]:
         """
-        מחזירה את מצב השולחן המלא כמילון, מוכן לשידור ללקוח.
-        :param table_id: ה-ID של השולחן.
-        :return: מילון המייצג את מצב השולחן, או None אם השולחן לא נמצא.
+        Returns the full table state as a dictionary, ready for transmission to the client.
+        :param table_id: The ID of the table.
+        :return: A dictionary representing the table state, or None if the table is not found.
         """
         table = self.get_table_by_id(table_id)
         if table:
@@ -208,12 +205,12 @@ class GameManager:
         player = self._connected_players.get(player_id)
         if player:
             if player.socket_id != sid:
-                self.logger.info(f"מעדכן את מזהה ה-socket עבור שחקן {player_id} מ-{player.socket_id} ל-{sid}.")
+                self.logger.info(f"Updating socket ID for player {player_id} from {player.socket_id} to {sid}.")
                 player.socket_id = sid
-            self.logger.info(f"אובייקט Player קיים אוחזר עבור user_id {player_id}.")
+            self.logger.info(f"Existing Player object retrieved for user_id {player_id}.")
         else:
             print(" see the user chips: ", user.chips)
             player = Player(user=user, socket_id=sid) 
             self._connected_players[player_id] = player
-            self.logger.info(f"נוצר אובייקט Player חדש עבור user_id <User {user.nickname}> (שם משתמש: {user.nickname}).")
+            self.logger.info(f"New Player object created for user_id <User {user.nickname}> (username: {user.nickname}).")
         return player

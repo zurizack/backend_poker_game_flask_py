@@ -1,156 +1,151 @@
 import enum
 from typing import List, Optional
 
-from backend.poker_server.game.engine.card_oop import Card # ודא שזה הייבוא הנכון של מחלקת Card
+from backend.poker_server.game.engine.card_oop import Card # Ensure this is the correct import for the Card class
 
-# הגדרת Enum למצבי היד של השחקן
+# Define Enum for player hand states
 class PlayerHandStatus(enum.Enum):
     """
-    מייצג את מצבי השחקן השונים ביד פוקר נוכחית.
+    Represents the different states of a player in a current poker hand.
     """
-    ACTIVE = "ACTIVE"                       # פעיל, יכול לבצע פעולות
-    FOLDED = "FOLDED"                       # קיפל את היד, לא משתתף בקופה
-    ALL_IN = "ALL_IN"                       # הימר את כל הצ'יפים, עדיין משתתף בקופה
-    # שחקן חדש שהתיישב או שחקן ותיק שחוזר, ממתין ליד הבאה.
+    ACTIVE = "ACTIVE"                       # Active, can perform actions
+    FOLDED = "FOLDED"                       # Folded the hand, not participating in the pot
+    ALL_IN = "ALL_IN"                       # Bet all chips, still participating in the pot
+    # A new player who just sat down or a returning player, waiting for the next hand.
     WAITING_FOR_NEW_HAND = "WAITING_FOR_NEW_HAND" 
-    # שחקן שיושב ליד השולחן אך אינו משתתף ביד הנוכחית (לדוגמה, לקח הפסקה קצרה).
+    # A player sitting at the table but not participating in the current hand (e.g., taking a short break).
     SITTING_OUT = "SITTING_OUT"
     NOT_SEATED = "NOT_SEATED"
 
-# הגדרת Enum לפעולות השחקן (ייתכן שקיים כבר במקום אחר, אך נכלל כאן לשלמות)
+# Define Enum for player actions (might already exist elsewhere, but included here for completeness)
 class PlayerAction(enum.Enum):
     """
-    מייצג את הפעולות האפשריות ששחקן יכול לבצע.
+    Represents the possible actions a player can perform.
     """
     CHECK = "CHECK"
     CALL = "CALL"
     RAISE = "RAISE"
     BET = "BET"
     FOLD = "FOLD"
-    ALL_IN = "ALL_IN" # יכול להיות פעולה בפני עצמה, או כחלק מ-BET/RAISE/CALL
+    ALL_IN = "ALL_IN" # Can be an action by itself, or part of BET/RAISE/CALL
 
 
 class PlayerHand:
     """
-    מחלקה שמייצגת את מצב היד הספציפית של שחקן בתוך יד פוקר מתנהלת.
-    מכילה את הקלפים, סטטוס היד, ההימור ביד הנוכחית ופעולה אחרונה.
+    A class that represents the specific hand state of a player within an ongoing poker hand.
+    Contains the cards, hand status, current bet in the hand, and last action.
     """
     def __init__(self):
         """
-        קונסטרוקטור למחלקת PlayerHand.
-        מאפס את כל הנתונים של היד, מוגדר כ-WAITING_FOR_NEW_HAND כברירת מחדל.
+        Constructor for the PlayerHand class.
+        Resets all hand data, defaulting to WAITING_FOR_NEW_HAND.
         """
         self._cards: List[Card] = []
         self._status: PlayerHandStatus = PlayerHandStatus.WAITING_FOR_NEW_HAND
-        self._current_bet_in_hand: int = 0  # סך הצ'יפים שהשחקן הימר ביד זו (על פני כל הסיבובים).
+        self._current_bet_in_hand: int = 0  # Total chips the player has bet in this hand (across all rounds).
         self._last_action: Optional[PlayerAction] = None
 
     def set_cards(self, cards: List[Card]):
         """
-        מגדיר את קלפי היד הסמויים של השחקן.
-        :param cards: רשימה של שני אובייקטי Card.
-        :raises ValueError: אם הרשימה אינה מכילה בדיוק 2 קלפים.
+        Sets the player's hole cards.
+        :param cards: A list of two Card objects.
+        :raises ValueError: If the list does not contain exactly 2 cards.
         """
         if len(cards) != 2:
-            raise ValueError("יד פוקר חייבת להכיל בדיוק 2 קלפים.")
-        self._cards = list(cards) # שומר עותק
+            raise ValueError("A poker hand must contain exactly 2 cards.")
+        self._cards = list(cards) # Store a copy
 
     def clear_cards(self):
         """
-        מנקה את קלפי היד של השחקן (לקראת יד חדשה).
+        Clears the player's hand cards (for a new hand).
         """
         self._cards = []
 
     def get_cards(self) -> List[Card]:
         """
-        מחזירה עותק של קלפי היד הסמויים של השחקן.
+        Returns a copy of the player's hole cards.
         """
-        return list(self._cards) # מחזיר עותק כדי למנוע שינוי ישיר מבחוץ
+        return list(self._cards) # Returns a copy to prevent direct external modification
 
     def set_status(self, status: PlayerHandStatus):
         """
-        מגדירה את מצב היד הנוכחי של השחקן.
-        :param status: אחד מערכי PlayerHandStatus.
+        Sets the player's current hand status.
+        :param status: One of the PlayerHandStatus values.
         """
         self._status = status
 
     def get_status(self) -> PlayerHandStatus:
         """
-        מחזירה את מצב היד הנוכחי של השחקן.
+        Returns the player's current hand status.
         """
         return self._status
 
     def add_to_bet(self, amount: int):
         """
-        מוסיף סכום להימור המצטבר של השחקן ביד זו.
-        :param amount: הסכום להוספה. חייב להיות חיובי.
-        :raises ValueError: אם הסכום שלילי.
+        Adds an amount to the player's accumulated bet in this hand.
+        :param amount: The amount to add. Must be positive.
+        :raises ValueError: If the amount is negative.
         """
         if amount < 0:
-            raise ValueError("סכום ההימור חייב להיות חיובי.")
+            raise ValueError("Bet amount must be positive.")
         self._current_bet_in_hand += amount
 
     def get_bet_in_hand(self) -> int:
         """
-        מחזירה את סך הצ'יפים שהשחקן הימר ביד זו (על פני כל הסיבובים).
+        Returns the total chips the player has bet in this hand (across all rounds).
         """
         return self._current_bet_in_hand
 
     def reset_bet(self):
         """
-        מאפס את סכום ההימור המצטבר ביד (לקראת יד חדשה).
+        Resets the accumulated bet amount in the hand (for a new hand).
         """
         self._current_bet_in_hand = 0
 
     def set_last_action(self, action: PlayerAction):
         """
-        מגדירה את הפעולה האחרונה שהשחקן ביצע.
-        :param action: אחד מערכי PlayerAction.
+        Sets the last action performed by the player.
+        :param action: One of the PlayerAction values.
         """
         self._last_action = action
 
     def get_last_action(self) -> Optional[PlayerAction]:
         """
-        מחזירה את הפעולה האחרונה שהשחקן ביצע.
+        Returns the last action performed by the player.
         """
         return self._last_action
 
     def reset_state(self):
         """
-        מאפסת את כל המצבים הספציפיים ליד לקראת תחילת יד חדשה.
-        מגדירה את הסטטוס ל-ACTIVE כברירת מחדל ליד חדשה.
+        Resets all hand-specific states for the start of a new hand.
+        Sets the status to ACTIVE by default for a new hand.
         """
         self.clear_cards()
         self.reset_bet()
-        self.set_status(PlayerHandStatus.ACTIVE) # ברירת מחדל: פעיל ביד חדשה
+        self.set_status(PlayerHandStatus.ACTIVE) # Default: active in a new hand
         self.set_last_action(None)
 
     def __str__(self) -> str:
         """
-        מחזירה ייצוג קריא של מצב היד, למטרות תצוגה.
+        Returns a readable representation of the hand state, for display purposes.
         """
-        status_he = {
-            PlayerHandStatus.ACTIVE: "פעיל",
-            PlayerHandStatus.FOLDED: "קיפל",
-            PlayerHandStatus.ALL_IN: "אול-אין",
-            PlayerHandStatus.WAITING_FOR_NEW_HAND: "ממתין ליד חדשה",
-            PlayerHandStatus.SITTING_OUT: "יושב בחוץ"
-        }
-        status_display = status_he.get(self.get_status(), "לא ידוע")
+        # No direct Hebrew conversion needed since the Enum values themselves are English.
+        # This mapping was for Hebrew display, but for English output, the enum value is sufficient.
+        status_display = self.get_status().value
         
-        cards_display = ", ".join(str(card) for card in self._cards) if self._cards else "אין קלפים"
-        last_action_display = self.get_last_action().value if self.get_last_action() else "אין"
+        cards_display = ", ".join(str(card) for card in self._cards) if self._cards else "No cards"
+        last_action_display = self.get_last_action().value if self.get_last_action() else "None"
 
         return (
-            f"מצב יד: {status_display} "
-            f"- קלפים: [{cards_display}] "
-            f"- הימור ביד: {self._current_bet_in_hand} "
-            f"- פעולה אחרונה: {last_action_display}"
+            f"Hand Status: {status_display} "
+            f"- Cards: [{cards_display}] "
+            f"- Bet in Hand: {self._current_bet_in_hand} "
+            f"- Last Action: {last_action_display}"
         )
 
     def __repr__(self) -> str:
         """
-        מחזירה ייצוג חד-משמעי של האובייקט, המשמש לדיבוג ופיתוח.
+        Returns an unambiguous representation of the object, used for debugging and development.
         """
         cards_repr = [repr(card) for card in self._cards]
         return (
