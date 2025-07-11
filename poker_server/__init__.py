@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_cors import CORS
 from flask_socketio import SocketIO
 import logging # Import logging
+import os
 
 # Initialize SQLAlchemy database object (without app context here)
 db = SQLAlchemy()
@@ -13,8 +14,10 @@ db = SQLAlchemy()
 # Initialize Flask-Login manager (without app context here)
 login_manager = LoginManager()
 
+allowed_origins = os.getenv('CORS_ALLOWED_ORIGIN', 'http://localhost:3000')
+
 # Initialize SocketIO (without app context here)
-socketio = SocketIO(cors_allowed_origins="https://frontend-poker-game.onrender.com", manage_session=False, async_mode='gevent')
+socketio = SocketIO(cors_allowed_origins=allowed_origins, manage_session=False, async_mode='gevent')
 
 # --- Import GameManager and DBManager ---
 # Ensure these paths are correct!
