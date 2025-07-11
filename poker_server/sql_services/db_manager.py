@@ -3,52 +3,52 @@
 import logging
 from typing import Optional, Dict, Any, List
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session # לטיפוס סשן עבור רמזים
+from sqlalchemy.orm import Session # For session type hinting
 from datetime import date
 
-# --- ודא שנתיבי הייבוא האלה נכונים בהתאם למבנה הפרויקט שלך ---
-# אובייקט ה-db של Flask-SQLAlchemy (מתוך __init__.py של poker_server)
+# --- Ensure these import paths are correct according to your project structure ---
+# Flask-SQLAlchemy db object (from poker_server's __init__.py)
 from .. import db 
-# מודלים של בסיס הנתונים
+# Database models
 from ..models.user import User
 from ..models.poker_table import PokerTable
 
-# הגדרת לוגר עבור DBManager
+# Configure logger for DBManager
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
 class DBManager:
     """
-    מנהל את האינטראקציה עם בסיס הנתונים באמצעות SQLAlchemy (מבוסס על Flask-SQLAlchemy).
-    אחראי על שמירת וטעינת נתוני שחקנים ושולחנות.
-    מממש Singleton Pattern כדי להבטיח מופע יחיד של המנהל.
+    Manages interaction with the database using SQLAlchemy (based on Flask-SQLAlchemy).
+    Responsible for saving and loading player and table data.
+    Implements the Singleton Pattern to ensure a single instance of the manager.
     """
-    _instance: Optional['DBManager'] = None # רמז טיפוס למופע הסינגלטון
+    _instance: Optional['DBManager'] = None # Type hint for the singleton instance
 
     def __new__(cls, flask_db_instance: Any):
         """
-        מממש את דפוס הסינגלטון עבור DBManager.
-        :param flask_db_instance: אובייקט ה-db של Flask-SQLAlchemy המאותחל.
+        Implements the Singleton pattern for DBManager.
+        :param flask_db_instance: The initialized Flask-SQLAlchemy db object.
         """
         if cls._instance is None:
             cls._instance = super(DBManager, cls).__new__(cls)
             cls._instance._db = flask_db_instance
-            logger.info("DBManager אותחל בהצלחה ומשתמש באובייקט ה-Flask-SQLAlchemy DB.")
+            logger.info("DBManager initialized successfully and using Flask-SQLAlchemy DB object.")
         return cls._instance
 
     def get_session(self) -> Session:
         """
-        מחזירה את סשן בסיס הנתונים הנוכחי של Flask-SQLAlchemy.
+        Returns the current Flask-SQLAlchemy database session.
         """
         return self._db.session
 
-    # --- ניהול משתמשים (User) ---
+    # --- User Management ---
 
     def register_user(self, first_name: str, last_name: str, email: str, nickname: str, password: str, birthdate: Optional[date] = None, initial_chips: int = 1000) -> Optional[int]:
         """
-        רושם משתמש חדש בבסיס הנתונים.
-        מחזיר את ה-ID של המשתמש שנרשם, או None אם הכינוי/אימייל כבר תפוסים.
+        Registers a new user in the database.
+        Returns the ID of the registered user, or None if the nickname/email is already taken.
         """
         session = self.get_session()
         try:
@@ -58,67 +58,67 @@ class DBManager:
                 email=email,
                 nickname=nickname,
                 chips=initial_chips,
-                birthdate=birthdate # יכול להיות None
+                birthdate=birthdate # Can be None
             )
-            new_user.set_password(password) # משתמש במתודה הקיימת במודל User
+            new_user.set_password(password) # Uses the existing method in the User model
             
             session.add(new_user)
             session.commit()
-            session.refresh(new_user) # רענן את האובייקט כדי לקבל את ה-ID החדש
-            logger.info(f"משתמש '{nickname}' (ID: {new_user.id}) נרשם בהצלחה.")
+            session.refresh(new_user) # Refresh the object to get the new ID
+            logger.info(f"User '{nickname}' (ID: {new_user.id}) registered successfully.")
             return new_user.id
         except IntegrityError:
-            session.rollback() # מבטל שינויים אם יש הפרת ייחודיות (כינוי/אימייל כבר קיימים)
-            logger.warning(f"שגיאה: שם המשתמש או האימייל של '{nickname}' כבר קיימים.")
+            session.rollback() # Rolls back changes if there's a uniqueness violation (nickname/email already exists)
+            logger.warning(f"Error: Nickname or email for '{nickname}' already exists.")
             return None
         except Exception as e:
             session.rollback()
-            logger.error(f"שגיאה ברישום משתמש '{nickname}': {e}", exc_info=True)
+            logger.error(f"Error registering user '{nickname}': {e}", exc_info=True)
             return None
         finally:
-            session.close() # סוגר את הסשן
+            session.close() # Closes the session
 
     def authenticate_user(self, nickname: str, password: str) -> Optional[Dict]:
         """
-        מאמת משתמש ומחזיר את נתוניו הבסיסיים אם האימות הצליח.
-        :return: מילון עם נתוני המשתמש (id, nickname, chips, is_admin) או None אם האימות נכשל.
+        Authenticates a user and returns their basic data if authentication is successful.
+        :return: A dictionary with user data (id, nickname, chips, is_admin) or None if authentication fails.
         """
         session = self.get_session()
         try:
             user = session.query(User).filter(User.nickname == nickname).first()
 
             if user:
-                if user.check_password(password): # משתמש במתודה הקיימת במודל User
-                    logger.info(f"משתמש '{nickname}' אומת בהצלחה.")
+                if user.check_password(password): # Uses the existing method in the User model
+                    logger.info(f"User '{nickname}' authenticated successfully.")
                     return {
                         "id": user.id,
                         "nickname": user.nickname,
                         "chips": user.chips,
                         "is_admin": user.is_admin,
-                        "first_name": user.first_name, # הוספתי שדות נוספים שקיימים במודל
+                        "first_name": user.first_name, # Added additional fields existing in the model
                         "last_name": user.last_name,
                         "email": user.email
                     }
                 else:
-                    logger.warning(f"שגיאה: סיסמה שגויה עבור '{nickname}'.")
+                    logger.warning(f"Error: Incorrect password for '{nickname}'.")
                     return None
             else:
-                logger.warning(f"שגיאה: שם המשתמש '{nickname}' לא נמצא.")
+                logger.warning(f"Error: Username '{nickname}' not found.")
                 return None
         except Exception as e:
-            logger.error(f"שגיאה באימות משתמש '{nickname}': {e}", exc_info=True)
+            logger.error(f"Error authenticating user '{nickname}': {e}", exc_info=True)
             return None
         finally:
             session.close()
 
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         """
-        שולפת אובייקט User ממסד הנתונים לפי ה-ID שלו.
-        הערה: המתודה הזו מחזירה אובייקט User ישירות, לא מילון.
+        Fetches a User object from the database by its ID.
+        Note: This method returns a User object directly, not a dictionary.
         """
         session = self.get_session()
         try:
-            # שימוש ב-get() עבור Primary Key הוא יעיל יותר
+            # Using get() for Primary Key is more efficient
             user = session.get(User, user_id) 
             if user:
                 logger.debug(f"User {user_id} fetched successfully from DB: {user.nickname}.")
@@ -133,7 +133,7 @@ class DBManager:
 
     def get_user_data(self, user_id: int) -> Optional[Dict]:
         """
-        מחזירה את כל נתוני המשתמש מה-DB לפי ID.
+        Returns all user data from the DB by ID.
         """
         session = self.get_session()
         try:
@@ -147,24 +147,24 @@ class DBManager:
                     "nickname": user.nickname,
                     "chips": user.chips,
                     "is_admin": user.is_admin,
-                    "birthdate": str(user.birthdate) if user.birthdate else None # המרה לסטרינג אם קיים
+                    "birthdate": str(user.birthdate) if user.birthdate else None # Convert to string if exists
                 }
-            logger.warning(f"לא נמצא משתמש עם ID: {user_id}.")
+            logger.warning(f"No user found with ID: {user_id}.")
             return None
         except Exception as e:
-            logger.error(f"שגיאה בקבלת נתוני משתמש {user_id}: {e}", exc_info=True)
+            logger.error(f"Error getting user data {user_id}: {e}", exc_info=True)
             return None
         finally:
             session.close()
 
     def save_user_changes(self, user: User):
         """
-        שומרת שינויים שבוצעו באובייקט User (כמו עדכון צ'יפים).
+        Saves changes made to a User object (like chip updates).
         """
         session = self.get_session()
         try:
-            # האובייקט user אמור להיות כבר "attached" לסשן אם הוא נשלף ממנו.
-            # אם הוא לא, session.add(user) תוסיף אותו.
+            # The user object should already be "attached" to the session if it was fetched from it.
+            # If not, session.add(user) will add it.
             session.add(user) 
             session.commit()
             logger.debug(f"User {user.id} changes saved to DB. New chips: {user.chips}.")
@@ -176,7 +176,7 @@ class DBManager:
 
     def update_user_chips(self, user_id: int, new_chips_amount: int) -> bool:
         """
-        מעדכן את כמות הצ'יפים של משתמש בבסיס הנתונים.
+        Updates the chip amount of a user in the database.
         """
         session = self.get_session()
         try:
@@ -184,29 +184,29 @@ class DBManager:
             if user:
                 user.chips = new_chips_amount
                 session.commit()
-                logger.info(f"צ'יפים של משתמש {user_id} עודכנו ל: {new_chips_amount}.")
+                logger.info(f"User {user_id} chips updated to: {new_chips_amount}.")
                 return True
-            logger.warning(f"אזהרה: לא נמצא משתמש עם ID {user_id} לעדכון צ'יפים.")
+            logger.warning(f"Warning: No user found with ID {user_id} to update chips.")
             return False
         except Exception as e:
             session.rollback()
-            logger.error(f"שגיאה בעדכון צ'יפים למשתמש {user_id}: {e}", exc_info=True)
+            logger.error(f"Error updating chips for user {user_id}: {e}", exc_info=True)
             return False
         finally:
             session.close()
 
-    # --- ניהול שולחנות פוקר (PokerTable) ---
+    # --- Poker Table Management ---
 
     def get_table_data_for_server(self, table_id: int) -> Optional[Dict[str, Any]]:
         """
-        שולפת נתונים בסיסיים על שולחן פוקר ספציפי מבסיס הנתונים.
-        מחזירה מילון פייתון טהור עם נתוני השולחן, או None אם השולחן לא נמצא.
-        (הועברה מ-poker_server/sql_services/table_data.py)
+        Fetches basic data about a specific poker table from the database.
+        Returns a pure Python dictionary with table data, or None if the table is not found.
+        (Moved from poker_server/sql_services/table_data.py)
         """
         logger.info(f"DBManager: Fetching basic table data for table ID: {table_id}.")
         session = self.get_session()
         try:
-            # שימוש ב-get() עבור Primary Key הוא יעיל
+            # Using get() for Primary Key is efficient
             table = session.query(PokerTable).get(table_id) 
             
             if not table:
@@ -214,15 +214,15 @@ class DBManager:
                 return None
             
             return {
-                'id': table.id, # נשאר int כפי שמוגדר במודל
+                'id': table.id, # Remains int as defined in the model
                 'name': table.name,
                 'max_players': table.max_players,
                 'small_blind': table.small_blind,
                 'big_blind': table.big_blind,
-                'created_at': str(table.created_at) # המרה לסטרינג לייצוג נוח
+                'created_at': str(table.created_at) # Convert to string for convenient representation
             }
         except Exception as e:
-            session.rollback() # ודא שחרור אם יש שגיאה
+            session.rollback() # Ensure rollback if there's an error
             logger.error(f"DBManager: Error fetching table {table_id} from SQL DB: {e}", exc_info=True)
             return None
         finally:
@@ -230,8 +230,8 @@ class DBManager:
 
     def create_poker_table(self, name: str, small_blind: int, big_blind: int, max_players: int = 9) -> Optional[int]:
         """
-        יוצר שולחן פוקר חדש בבסיס הנתונים.
-        מחזיר את ה-ID של השולחן שנוצר, או None אם הייתה שגיאה.
+        Creates a new poker table in the database.
+        Returns the ID of the created table, or None if an error occurred.
         """
         session = self.get_session()
         try:
@@ -243,19 +243,19 @@ class DBManager:
             )
             session.add(new_table)
             session.commit()
-            session.refresh(new_table) # כדי לקבל את ה-ID החדש
-            logger.info(f"שולחן פוקר '{name}' (ID: {new_table.id}) נוצר בהצלחה.")
+            session.refresh(new_table) # To get the new ID
+            logger.info(f"Poker table '{name}' (ID: {new_table.id}) created successfully.")
             return new_table.id
         except Exception as e:
             session.rollback()
-            logger.error(f"שגיאה ביצירת שולחן פוקר '{name}': {e}", exc_info=True)
+            logger.error(f"Error creating poker table '{name}': {e}", exc_info=True)
             return None
         finally:
             session.close()
 
     def get_all_poker_tables(self) -> List[Dict[str, Any]]:
         """
-        מחזירה רשימה של כל שולחנות הפוקר הקיימים בבסיס הנתונים.
+        Returns a list of all existing poker tables in the database.
         """
         session = self.get_session()
         tables_data = []
@@ -270,12 +270,12 @@ class DBManager:
                     'big_blind': table.big_blind,
                     'created_at': str(table.created_at)
                 })
-            logger.info(f"נשלפו {len(tables_data)} שולחנות פוקר מבסיס הנתונים.")
+            logger.info(f"Fetched {len(tables_data)} poker tables from the database.")
             return tables_data
         except Exception as e:
-            logger.error(f"שגיאה בשליפת כל שולחנות הפוקר: {e}", exc_info=True)
+            logger.error(f"Error fetching all poker tables: {e}", exc_info=True)
             return []
         finally:
             session.close()
 
-    # ... (ניתן להוסיף כאן מתודות נוספות לפי הצורך, למשל: update_table_settings, delete_table) ...
+    # ... (additional methods can be added here as needed, e.g., update_table_settings, delete_table) ...

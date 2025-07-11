@@ -23,7 +23,6 @@ def score_five_card_hand(cards):
     flush = len(set(suits)) == 1
     straight = is_straight(values)
 
-    # ניקוד (ככל שגבוה יותר - היד חזקה יותר)
     if flush and straight:
         return 800 + high_card_rank(values)
     if 4 in counts.values():

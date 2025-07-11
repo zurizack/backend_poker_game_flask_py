@@ -18,7 +18,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 # לעולם אל תשים מפתח סודי ישירות בקוד בייצור!
 # עבור פיתוח מקומי, אתה יכול להגדיר אותו בקובץ .env או להשתמש בערך ברירת מחדל כלשהו,
 # אבל ב-Render הוא יגיע ממשתנה הסביבה שתגדיר.
-SECRET_KEY = os.getenv('SECRET_KEY', 'a_very_secret_key_for_development_only_replace_in_production')
+SECRET_KEY = os.getenv('SECRET_KEY', '01d3fe32ba6bfebd9bd08b56d1220cb9a5735d9be683b956')
 
 # SESSION / COOKIE CONFIGURATION
 # These settings are important for handling login sessions across different origins

@@ -5,119 +5,119 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_cors import CORS
 from flask_socketio import SocketIO
-import logging # ייבוא לוגינג
+import logging # Import logging
 
-# אתחול אובייקט בסיס הנתונים SQLAlchemy (ללא קונטקסט אפליקציה כאן)
+# Initialize SQLAlchemy database object (without app context here)
 db = SQLAlchemy()
 
-# אתחול מנהל Flask-Login (ללא קונטקסט אפליקציה כאן)
+# Initialize Flask-Login manager (without app context here)
 login_manager = LoginManager()
 
-# אתחול SocketIO (ללא קונטקסט אפליקציה כאן)
+# Initialize SocketIO (without app context here)
 socketio = SocketIO(cors_allowed_origins="http://localhost:3000", manage_session=False, async_mode='gevent')
 
-# --- ייבוא GameManager ו-DBManager ---
-# ודא שהנתיבים האלה נכונים!
-from backend.poker_server.sql_services.db_manager import DBManager
-from backend.poker_server.game.engine.game_manager_oop import GameManager 
+# --- Import GameManager and DBManager ---
+# Ensure these paths are correct!
+from poker_server.sql_services.db_manager import DBManager
+from poker_server.game.engine.game_manager_oop import GameManager 
 
-# --- משתנה גלובלי לאחסון מופע GameManager ---
-# זה יהיה המופע היחיד של GameManager שיהיה נגיש לכל חלקי האפליקציה.
+# --- Global variable to store GameManager instance ---
+# This will be the single instance of GameManager accessible to all parts of the application.
 game_manager_instance: Optional[GameManager] = None
-db_manager_instance: Optional[DBManager] = None # הוספנו משתנה גלובלי עבור DBManager גם כן
+db_manager_instance: Optional[DBManager] = None # Added global variable for DBManager as well
 
 
 def create_app():
     """
-    פונקציית פקטורי לאפליקציה:
-    - יוצרת מופע של אפליקציית פלאסק
-    - טוענת קונפיגורציה מ-settings.py
-    - מאתחלת הרחבות (SQLAlchemy, LoginManager, SocketIO) עם האפליקציה
-    - יוצרת את כל טבלאות בסיס הנתונים בתוך קונטקסט האפליקציה
-    - מאתחלת GameManager ו-DBManager
-    - רושמת את ה-blueprints של האימות והמשחק
-    - מחזירה את מופע האפליקציה המוגדר
+    Application factory function:
+    - Creates a Flask app instance
+    - Loads configuration from settings.py
+    - Initializes extensions (SQLAlchemy, LoginManager, SocketIO) with the app
+    - Creates all database tables within the application context
+    - Initializes GameManager and DBManager
+    - Registers authentication and game blueprints
+    - Returns the configured app instance
     """
     app = Flask(__name__)
 
-    app.config.from_pyfile('config/settings.py')  # טוען קונפיגורציה מקובץ חיצוני
+    app.config.from_pyfile('config/settings.py')  # Loads configuration from an external file
 
-    # הפעלת CORS עם תמיכה ב-credentials עבור מקור הפרונטאנד
+    # Enable CORS with credentials support for the frontend origin
     CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 
-    # קשירת מופעי SQLAlchemy ו-LoginManager לאפליקציה זו
+    # Bind SQLAlchemy and LoginManager instances to this app
     db.init_app(app)
     login_manager.init_app(app)
     socketio.init_app(app)
 
-    # --- יצירת טבלאות בסיס נתונים ---
+    # --- Create Database Tables ---
     with app.app_context():
-        # ייבוא המודלים שלך כדי ש-db.create_all() יזהה אותם
+        # Import your models so db.create_all() recognizes them
         from .models.user import User
         from .models.poker_table import PokerTable
-        #from .models.table_player import TablePlayer # אם קיים אצלך - ודא שזה נכון
+        #from .models.table_player import TablePlayer # If exists - ensure this is correct
 
-        db.create_all() # יוצר את כל הטבלאות עבור המודלים שהוגדרו
-        logging.info("טבלאות בסיס הנתונים נוצרו/עודכנו בהצלחה.")
+        db.create_all() # Creates all tables for the defined models
+        logging.info("Database tables created/updated successfully.")
 
-        # --- אתחול DBManager ו-GameManager ---
-        # נשתמש במשתנים הגלובליים
+        # --- Initialize DBManager and GameManager ---
+        # We will use the global variables
         global db_manager_instance 
         global game_manager_instance
 
-        # ✅ שלב 1: יצירת מופע של DBManager והעברת אובייקט ה-db של Flask-SQLAlchemy
+        # ✅ Step 1: Create an instance of DBManager and pass the Flask-SQLAlchemy db object
         db_manager_instance = DBManager(db) 
-        # ניתן לשמור אותו על אובייקט האפליקציה לנוחות גישה עתידית
+        # Can store it on the app object for convenient future access
         app.db_manager = db_manager_instance 
-        logging.info("DBManager אותחל בהצלחה.") # לוג עבור DBManager
+        logging.info("DBManager initialized successfully.") # Log for DBManager
 
-        # ✅ שלב 2: יצירת מופע של GameManager והעברת מופע ה-DBManager שיצרנו
+        # ✅ Step 2: Create an instance of GameManager and pass the DBManager instance we created
         game_manager_instance = GameManager(db_manager_instance) 
-        # ניתן לשמור אותו על אובייקט האפליקציה לנוחות גישה עתידית
+        # Can store it on the app object for convenient future access
         app.game_manager = game_manager_instance 
-        logging.info("GameManager אותחל בהצלחה בתוך קונטקסט האפליקציה.") # לוג עבור GameManager
+        logging.info("GameManager initialized successfully within the application context.") # Log for GameManager
 
 
-    # --- הגדרת טוען המשתמש של Flask-Login ---
+    # --- Configure Flask-Login user loader ---
     @login_manager.user_loader
     def load_user(user_id):
         """
         Flask-Login user loader callback.
-        בהינתן ID משתמש (כסטרינג), מחזיר את אובייקט ה-User או None.
-        זה משמש לטעינה מחדש של המשתמש מהסשן.
+        Given a user ID (as a string), returns the User object or None.
+        This is used to reload the user from the session.
         """
-        # עכשיו אנחנו יכולים להשתמש ב-DBManager כדי לטעון את המשתמש
-        # מכיוון ש-db_manager_instance הוא גלובלי, נוכל לגשת אליו ישירות.
-        # הערה: Flask-Login מצפה לאובייקט User, לא למילון.
-        # לכן, נצטרך לשלוף את אובייקט ה-User המלא מה-DB.
-        # נשתמש ב-db_manager_instance.get_user_by_id() (אם הוא מחזיר אובייקט User מלא)
-        # או ב-User.query.get() ישירות אם זהו הקונטקסט של Flask-Login.
-        # עדיף להשתמש ב-DBManager לגישה עקבית.
-        if db_manager_instance: # ודא ש-db_manager_instance כבר אותחל
+        # Now we can use DBManager to load the user
+        # Since db_manager_instance is global, we can access it directly.
+        # Note: Flask-Login expects a User object, not a dictionary.
+        # Therefore, we will need to fetch the full User object from the DB.
+        # We will use db_manager_instance.get_user_by_id() (if it returns a full User object)
+        # or User.query.get() directly if this is the Flask-Login context.
+        # It's better to use DBManager for consistent access.
+        if db_manager_instance: # Ensure db_manager_instance is already initialized
             return db_manager_instance.get_user_by_id(int(user_id))
         else:
-            # אם מסיבה כלשהי db_manager_instance עדיין לא אותחל (מקרה קצה),
-            # נחזור לגישה ישירה למודל.
-            from .models.user import User # ייבוא מקומי כדי למנוע Circular Import
+            # If for some reason db_manager_instance is not yet initialized (edge case),
+            # we will fall back to direct model access.
+            from .models.user import User # Local import to prevent Circular Import
             return User.query.get(int(user_id))
 
     @app.after_request
     def log_set_cookie(response):
-        # למטרות דיבוג של קוקיז, ניתן להחליף בלוגינג מתאים
+        # For debugging cookies, can replace with appropriate logging
         return response
 
-    # --- רישום Blueprints ---
+    # --- Register Blueprints ---
     from .auth.routes import auth_bp
     from .game import register_game_blueprints 
 
     app.register_blueprint(auth_bp)
-    register_game_blueprints(app) # קריאה לפונקציה שרושמת Blueprints של משחק
+    register_game_blueprints(app) # Call the function that registers game Blueprints
 
-    # --- אתחול SocketIO Handlers ו-Emitters ---
-    from backend.poker_server.game.sockets.emitters_oop import PokerEmitters
-    PokerEmitters.initialize(socketio) # ודא ש-PokerEmitters מקבל את socketio
+    # --- Initialize SocketIO Handlers and Emitters ---
+    from poker_server.game.sockets.emitters_oop import PokerEmitters
+    PokerEmitters.initialize(socketio) # Ensure PokerEmitters receives socketio
 
-    from backend.poker_server.game.sockets import register_socket_handlers
-    register_socket_handlers(socketio) # ודא ש-register_socket_handlers מקבל את socketio
+    from poker_server.game.sockets import register_socket_handlers
+    register_socket_handlers(socketio) # Ensure register_socket_handlers receives socketio
 
     return app
