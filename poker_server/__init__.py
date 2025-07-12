@@ -122,12 +122,16 @@ def create_app():
         # For debugging cookies, can replace with appropriate logging
         return response
 
+    logging.info("Attempting to register blueprints...")
     # --- Register Blueprints ---
     from .auth.routes import auth_bp
     from .game import register_game_blueprints 
 
     app.register_blueprint(auth_bp)
+    logging.info(f"Blueprint 'auth_bp' registered. URL prefix: {auth_bp.url_prefix}")
+
     register_game_blueprints(app) # Call the function that registers game Blueprints
+    logging.info("Function 'register_game_blueprints' called.")
 
     # --- Initialize SocketIO Handlers and Emitters ---
     from .game.sockets.emitters_oop import PokerEmitters
@@ -136,4 +140,5 @@ def create_app():
     from .game.sockets import register_socket_handlers
     register_socket_handlers(socketio) # Ensure register_socket_handlers receives socketio
 
+    logging.info("App creation complete. Returning app instance.")
     return app
