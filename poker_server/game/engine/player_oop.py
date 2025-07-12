@@ -75,6 +75,12 @@ class Player:
         """Checks if the player is seated at a specific table."""
         return table_id in self._seated_positions
 
+    # def is_seated_at_any_table(self) -> bool: # ✅ פונקציה חדשה
+    #     """
+    #     Checks if the player is currently seated at any table.
+    #     """
+    #     return bool(self._seated_tables_data)
+
     def get_seated_position(self, table_id: str) -> Optional[Dict[str, Any]]:
         """Returns the seated position data for a specific table."""
         return self._seated_positions.get(table_id)

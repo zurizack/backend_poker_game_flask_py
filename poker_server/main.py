@@ -18,15 +18,13 @@ logging.basicConfig(
     ]
 )
 
-load_dotenv(dotenv_path=os.path.join("poker_server", ".env"))
-
-# --- הסרנו את הייבוא והאתחול של SuperGameManager מכאן ---
-# server_manager_instance = SuperGameManager() # שורה זו נמחקה
+# load_dotenv(dotenv_path=os.path.join("poker_server", ".env"))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
 from . import create_app, socketio # ייבוא create_app ו-socketio
 
 app = create_app() # יצירת האפליקציה, וכעת גם GameManager מאותחל בתוכה
 
 if __name__ == '__main__':
-    logging.info("מריץ את שרת הפוקר...")
+    logging.info("run the poker server ... ")
     socketio.run(app, port=5000, debug=True, allow_unsafe_werkzeug=True)

@@ -7,7 +7,8 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 # בייצור (Render), נשתמש במשתנה הסביבה DATABASE_URL שמסופק על ידי Render.
 # בפיתוח מקומי, נמשיך להשתמש ב-SQLite.
 # חשוב: אם אתה עובר ל-PostgreSQL מקומי בפיתוח, שנה את ברירת המחדל בהתאם.
-SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(BASE_DIR, "..", "poker_game.db")}')
+
+SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL') # ✅ אין יותר ערך ברירת מחדל ל-SQLite
 
 # Disable SQLAlchemy's event system for tracking object modifications
 # This saves system resources and is recommended unless events are needed

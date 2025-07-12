@@ -692,3 +692,47 @@ class Table:
         for player in self.get_seated_players():
             player.reset_hand_state(self.table_id) # ✅ Pass table_id
             # If player is sitting out
+
+    def to_dict(self, include_private_data: bool = False) -> Dict[str, Any]:
+        """
+        Converts the Table object to a dictionary suitable for JSON serialization.
+        :param include_private_data: If True, includes player hand cards (for debugging/server-side use).
+                                     Should be False for client-side updates.
+        """
+        seated_players_data = []
+        for seat_num, player_obj in self._seats.items():
+            if player_obj:
+                seated_players_data.append({
+                    "seat_number": seat_num,
+                    "player_data": player_obj.to_dict(include_private_data=include_private_data, table_id=self.table_id) # Pass table_id
+                })
+            else:
+                seated_players_data.append({
+                    "seat_number": seat_num,
+                    "player_data": None
+                })
+        
+        viewers_data = [viewer.to_dict(include_private_data=False, table_id=self.table_id) for viewer in self._viewers.values()]
+
+        return {
+            "table_id": self.table_id,
+            "name": self.name,
+            "max_players": self.max_players,
+            "small_blind": self.small_blind,
+            "big_blind": self.big_blind,
+            "status": self.status.value, 
+            "num_seated_players": self.num_seated_players,
+            "seats": seated_players_data,
+            "viewers": viewers_data,
+            # ✅ התיקון כאן: בדוק אם הרשימה אינה ריקה לפני גישה לאיבר הראשון
+            "community_cards": [card.to_dict() for card in self.community_cards] if self.community_cards and hasattr(self.community_cards[0], 'to_dict') else [str(card) for card in self.community_cards if self.community_cards], # אם הרשימה ריקה, תחזיר רשימה ריקה
+            "pot_size": self.pot.get_total_pot_size(), 
+            "current_dealer_seat_index": self.current_dealer_seat_index,
+            "current_hand_number": self.current_hand_number,
+            "betting_round_data": self.betting_round.to_dict() if self.betting_round else None,
+            # ...
+        }
+    
+
+
+

@@ -34,25 +34,25 @@ def register_handlers_oop(socketio):
         logger.info(f"Authenticated user {player_id} (SID: {request.sid}) connected.")
 
         # ✅ Logic to handle re-connection of a seated player
-        player_obj = game_manager_instance.get_player_by_user_id(player_id)
-        if player_obj:
-            # Update the socket_id of the existing player
-            player_obj.socket_id = request.sid
-            game_manager_instance.update_player_socket_id(player_id, request.sid)
-            game_manager_instance.mark_player_reconnected(player_id) # Mark as reconnected
+        # player_obj = game_manager_instance.get_player_by_user_id(player_id)
+        # if player_obj:
+        #     # Update the socket_id of the existing player
+        #     player_obj.socket_id = request.sid
+        #     game_manager_instance.update_player_socket_id(player_id, request.sid)
+        #     game_manager_instance.mark_player_reconnected(player_id) # Mark as reconnected
 
-            if player_obj.is_seated():
-                table_id = player_obj.table_id
-                join_room(str(table_id)) # Rejoin the socket room
-                logger.info(f"Reconnected player {player_id} (SID: {request.sid}) rejoined table {table_id} SocketIO room.")
+        #     if player_obj.is_seated_at_table():
+        #         table_id = player_obj.table_id
+        #         join_room(str(table_id)) # Rejoin the socket room
+        #         logger.info(f"Reconnected player {player_id} (SID: {request.sid}) rejoined table {table_id} SocketIO room.")
                 
-                table_state = game_manager_instance.get_table_state(table_id)
-                if table_state:
-                    PokerEmitters._emit('full_table_state', table_state, sid=request.sid)
-                    PokerEmitters._emit('join_success', {'message': f"Already seated at table {table_id}."}, sid=request.sid)
-                else:
-                    PokerEmitters.emit_error(request.sid, "Internal error: Table state not found for seated player on reconnect.")
-                return # End handling here
+        #         table_state = game_manager_instance.get_table_state(table_id)
+        #         if table_state:
+        #             PokerEmitters._emit('full_table_state', table_state, sid=request.sid)
+        #             PokerEmitters._emit('join_success', {'message': f"Already seated at table {table_id}."}, sid=request.sid)
+        #         else:
+        #             PokerEmitters.emit_error(request.sid, "Internal error: Table state not found for seated player on reconnect.")
+        #         return # End handling here
 
         # **Very Important:**
         # Do not add lines like join_room here. This caused timing issues in the past.
@@ -80,7 +80,7 @@ def register_handlers_oop(socketio):
         
         # ✅ Logic to handle a player already seated in join_table
         player_obj = game_manager_instance.get_player_by_user_id(player_id)
-        if player_obj and player_obj.is_seated() and player_obj.table_id == table_id_str:
+        if player_obj and player_obj.is_seated_at_table(table_id_str) and player_obj.table_id == table_id_str:
             logger.info(f"Player {player_id} (SID: {sid}) is already seated at table {table_id_str}. Sending full state directly.")
             join_room(table_id_str) # Ensure they are in the room
             table_state = game_manager_instance.get_table_state(table_id_str)

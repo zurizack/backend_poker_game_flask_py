@@ -196,6 +196,7 @@ class GameManager:
         :return: A dictionary representing the table state, or None if the table is not found.
         """
         table = self.get_table_by_id(table_id)
+
         if table:
             return table.to_dict() 
         return None
@@ -214,3 +215,4 @@ class GameManager:
             self._connected_players[player_id] = player
             self.logger.info(f"New Player object created for user_id <User {user.nickname}> (username: {user.nickname}).")
         return player
+
