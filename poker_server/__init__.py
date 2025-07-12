@@ -8,6 +8,7 @@ from flask_socketio import SocketIO
 import logging # Import logging
 import os
 
+
 # Initialize SQLAlchemy database object (without app context here)
 db = SQLAlchemy()
 
@@ -89,7 +90,7 @@ def create_app():
         # Can store it on the app object for convenient future access
         app.db_manager = db_manager_instance 
         logging.info("DBManager initialized successfully.") # Log for DBManager
-        
+
         # ✅ Step 2: Create an instance of GameManager and pass the DBManager instance we created
         game_manager_instance = GameManager(db_manager_instance) 
         # Can store it on the app object for convenient future access
