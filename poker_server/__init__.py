@@ -54,22 +54,18 @@ def create_app():
     login_manager.init_app(app)
 
     socketio.init_app(app, cors_allowed_origins=allowed_origins, manage_session=False, async_mode='gevent')
-
-    # socketio.init_app(app)
+    from .models.user import User
+    from .models.poker_table import PokerTable
 
     # --- Create Database Tables ---
     with app.app_context():
-        # Import your models so db.create_all() recognizes them
-        from .models.user import User
-        from .models.poker_table import PokerTable
-        #from .models.table_player import TablePlayer # If exists - ensure this is correct
 
-        db.create_all() # Creates all tables for the defined models
+
+        db.create_all()
         logging.info("Database tables created/updated successfully.")
 
         logging.info("Attempting to test database table existence by fetching a user...")
         try:
-            # ננסה לשלוף משתמש כלשהו. אם הטבלה לא קיימת, זה יזרוק שגיאה.
             first_user = User.query.first()
             if first_user:
                 logging.info(f"Test fetch successful: Found existing user (ID: {first_user.id}). Tables exist and contain data.")
