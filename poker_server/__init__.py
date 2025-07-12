@@ -7,6 +7,7 @@ from flask_login import LoginManager
 from flask_socketio import SocketIO
 import logging # Import logging
 import os
+import sys
 
 
 # Initialize SQLAlchemy database object (without app context here)
@@ -57,10 +58,15 @@ def create_app():
     from .models.user import User
     from .models.poker_table import PokerTable
 
+    # --- הגדרת לוגינג ---
+    # הגדר את רמת הלוגינג הבסיסית ל-INFO ושלח פלט ל-sys.stdout
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    # וודא גם שלוגר האפליקציה של Flask מוגדר לרמת INFO
+    app.logger.setLevel(logging.INFO)
+    app.logger.info("Flask app logger initialized to INFO level.")
+
     # --- Create Database Tables ---
     with app.app_context():
-
-
         db.create_all()
         logging.info("Database tables created/updated successfully.")
 
@@ -122,8 +128,9 @@ def create_app():
         # For debugging cookies, can replace with appropriate logging
         return response
 
-    logging.info("Attempting to register blueprints...")
+    
     # --- Register Blueprints ---
+    logging.info("Attempting to register blueprints...")
     from .auth.routes import auth_bp
     from .game import register_game_blueprints 
 
