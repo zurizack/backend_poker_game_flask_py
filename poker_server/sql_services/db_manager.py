@@ -45,68 +45,81 @@ class DBManager:
 
     # --- User Management ---
 
-    def register_user(self, first_name: str, last_name: str, email: str, nickname: str, password: str, birthdate: Optional[date] = None, initial_chips: int = 1000) -> Optional[int]:
+    def register_user(self, first_name: str, last_name: str, email: str, username: str, nickname: str, password: str, birthdate: Optional[date] = None, initial_balance: float = 10000.0) -> Optional[int]: # ✅ Added username, nickname
         """
         Registers a new user in the database.
-        Returns the ID of the registered user, or None if the nickname/email is already taken.
+        Returns the ID of the registered user, or None if the username/nickname/email is already taken.
         """
         session = self.get_session()
         try:
+            # Check for existing username, nickname, or email
+            if session.query(User).filter(User.username == username).first():
+                logger.warning(f"Error: Username '{username}' already exists.")
+                return None
+            if session.query(User).filter(User.nickname == nickname).first():
+                logger.warning(f"Error: Nickname '{nickname}' already exists.")
+                return None
+            if email and session.query(User).filter(User.email == email).first():
+                logger.warning(f"Error: Email '{email}' already exists.")
+                return None
+
             new_user = User(
                 first_name=first_name,
                 last_name=last_name,
+                username=username, # ✅ Added username
+                nickname=nickname, # ✅ Added nickname
                 email=email,
-                nickname=nickname,
-                chips=initial_chips,
-                birthdate=birthdate # Can be None
+                balance=initial_balance, 
+                birthdate=birthdate 
             )
-            new_user.set_password(password) # Uses the existing method in the User model
+            new_user.set_password(password) 
             
             session.add(new_user)
             session.commit()
-            session.refresh(new_user) # Refresh the object to get the new ID
-            logger.info(f"User '{nickname}' (ID: {new_user.id}) registered successfully.")
+            session.refresh(new_user) 
+            logger.info(f"User '{username}' (Nickname: '{nickname}', ID: {new_user.id}) registered successfully.") # ✅ Updated log
             return new_user.id
         except IntegrityError:
-            session.rollback() # Rolls back changes if there's a uniqueness violation (nickname/email already exists)
-            logger.warning(f"Error: Nickname or email for '{nickname}' already exists.")
+            session.rollback() 
+            logger.warning(f"Error: Integrity error during registration for username '{username}', nickname '{nickname}'. This might indicate a unique constraint violation not caught by explicit checks.") # ✅ Updated log
             return None
         except Exception as e:
             session.rollback()
-            logger.error(f"Error registering user '{nickname}': {e}", exc_info=True)
+            logger.error(f"Error registering user '{username}' (Nickname: '{nickname}'): {e}", exc_info=True) # ✅ Updated log
             return None
         finally:
-            session.close() # Closes the session
+            session.close() 
 
-    def authenticate_user(self, nickname: str, password: str) -> Optional[Dict]:
+    def authenticate_user(self, username: str, password: str) -> Optional[Dict]: # ✅ Changed nickname to username
         """
         Authenticates a user and returns their basic data if authentication is successful.
-        :return: A dictionary with user data (id, nickname, chips, is_admin) or None if authentication fails.
+        :return: A dictionary with user data (id, username, nickname, balance, is_admin) or None if authentication fails.
         """
         session = self.get_session()
         try:
-            user = session.query(User).filter(User.nickname == nickname).first()
+            user = session.query(User).filter(User.username == username).first() # ✅ Changed User.nickname to User.username
 
             if user:
-                if user.check_password(password): # Uses the existing method in the User model
-                    logger.info(f"User '{nickname}' authenticated successfully.")
+                if user.check_password(password): 
+                    logger.info(f"User '{username}' authenticated successfully.") # ✅ Updated log
                     return {
                         "id": user.id,
-                        "nickname": user.nickname,
-                        "chips": user.chips,
-                        "is_admin": user.is_admin,
-                        "first_name": user.first_name, # Added additional fields existing in the model
+                        "username": user.username, # ✅ Added username
+                        "nickname": user.nickname, # ✅ Added nickname
+                        "balance": user.balance, 
+                        "is_admin": user.is_admin, 
+                        "first_name": user.first_name, 
                         "last_name": user.last_name,
                         "email": user.email
                     }
                 else:
-                    logger.warning(f"Error: Incorrect password for '{nickname}'.")
+                    logger.warning(f"Error: Incorrect password for '{username}'.") # ✅ Updated log
                     return None
             else:
-                logger.warning(f"Error: Username '{nickname}' not found.")
+                logger.warning(f"Error: Username '{username}' not found.") # ✅ Updated log
                 return None
         except Exception as e:
-            logger.error(f"Error authenticating user '{nickname}': {e}", exc_info=True)
+            logger.error(f"Error authenticating user '{username}': {e}", exc_info=True) # ✅ Updated log
             return None
         finally:
             session.close()
@@ -118,10 +131,9 @@ class DBManager:
         """
         session = self.get_session()
         try:
-            # Using get() for Primary Key is more efficient
             user = session.get(User, user_id) 
             if user:
-                logger.debug(f"User {user_id} fetched successfully from DB: {user.nickname}.")
+                logger.debug(f"User {user_id} fetched successfully from DB: {user.username} (Nickname: {user.nickname}).") # ✅ Updated log
             else:
                 logger.warning(f"User {user_id} not found in DB.")
             return user
@@ -144,10 +156,11 @@ class DBManager:
                     "first_name": user.first_name,
                     "last_name": user.last_name,
                     "email": user.email,
-                    "nickname": user.nickname,
-                    "chips": user.chips,
-                    "is_admin": user.is_admin,
-                    "birthdate": str(user.birthdate) if user.birthdate else None # Convert to string if exists
+                    "username": user.username, # ✅ Added username
+                    "nickname": user.nickname, # ✅ Added nickname
+                    "balance": user.balance, 
+                    "is_admin": user.is_admin, 
+                    "birthdate": str(user.birthdate) if user.birthdate else None 
                 }
             logger.warning(f"No user found with ID: {user_id}.")
             return None
@@ -159,38 +172,36 @@ class DBManager:
 
     def save_user_changes(self, user: User):
         """
-        Saves changes made to a User object (like chip updates).
+        Saves changes made to a User object (like balance updates).
         """
         session = self.get_session()
         try:
-            # The user object should already be "attached" to the session if it was fetched from it.
-            # If not, session.add(user) will add it.
             session.add(user) 
             session.commit()
-            logger.debug(f"User {user.id} changes saved to DB. New chips: {user.chips}.")
+            logger.debug(f"User {user.id} changes saved to DB. New balance: {user.balance}.") 
         except Exception as e:
             session.rollback() 
             logger.error(f"Error saving user {user.id} changes to DB: {e}", exc_info=True)
         finally:
             session.close()
 
-    def update_user_chips(self, user_id: int, new_chips_amount: int) -> bool:
+    def update_user_balance(self, user_id: int, new_balance_amount: float) -> bool: 
         """
-        Updates the chip amount of a user in the database.
+        Updates the balance amount of a user in the database.
         """
         session = self.get_session()
         try:
             user = session.query(User).filter(User.id == user_id).first()
             if user:
-                user.chips = new_chips_amount
+                user.balance = new_balance_amount 
                 session.commit()
-                logger.info(f"User {user_id} chips updated to: {new_chips_amount}.")
+                logger.info(f"User {user_id} balance updated to: {new_balance_amount}.") 
                 return True
-            logger.warning(f"Warning: No user found with ID {user_id} to update chips.")
+            logger.warning(f"Warning: No user found with ID {user_id} to update balance.") 
             return False
         except Exception as e:
             session.rollback()
-            logger.error(f"Error updating chips for user {user_id}: {e}", exc_info=True)
+            logger.error(f"Error updating balance for user {user_id}: {e}", exc_info=True) 
             return False
         finally:
             session.close()
@@ -206,7 +217,6 @@ class DBManager:
         logger.info(f"DBManager: Fetching basic table data for table ID: {table_id}.")
         session = self.get_session()
         try:
-            # Using get() for Primary Key is efficient
             table = session.query(PokerTable).get(table_id) 
             
             if not table:
@@ -214,15 +224,15 @@ class DBManager:
                 return None
             
             return {
-                'id': table.id, # Remains int as defined in the model
+                'id': table.id, 
                 'name': table.name,
                 'max_players': table.max_players,
                 'small_blind': table.small_blind,
                 'big_blind': table.big_blind,
-                'created_at': str(table.created_at) # Convert to string for convenient representation
+                'created_at': str(table.created_at) 
             }
         except Exception as e:
-            session.rollback() # Ensure rollback if there's an error
+            session.rollback() 
             logger.error(f"DBManager: Error fetching table {table_id} from SQL DB: {e}", exc_info=True)
             return None
         finally:
@@ -243,7 +253,7 @@ class DBManager:
             )
             session.add(new_table)
             session.commit()
-            session.refresh(new_table) # To get the new ID
+            session.refresh(new_table) 
             logger.info(f"Poker table '{name}' (ID: {new_table.id}) created successfully.")
             return new_table.id
         except Exception as e:

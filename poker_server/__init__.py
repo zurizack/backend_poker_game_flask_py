@@ -64,15 +64,15 @@ def create_app():
 
     # ✅ מיקום נכון לרישום ה-Blueprints!
     # זה חייב להיות כאן כדי שהם יירשמו לפני שהשרת מתחיל להאזין לבקשות.
-    app.logger.info("Attempting to register blueprints (early stage)...") # ✅ שימוש ב-app.logger.info
+    app.logger.info("Attempting to register blueprints (early stage)...") 
     from .auth.routes import auth_bp
     from .game import register_game_blueprints 
 
     app.register_blueprint(auth_bp)
-    app.logger.info(f"Blueprint 'auth_bp' registered (early stage). URL prefix: {auth_bp.url_prefix}") # ✅ שימוש ב-app.logger.info
+    app.logger.info(f"Blueprint 'auth_bp' registered (early stage). URL prefix: {auth_bp.url_prefix}") 
 
     register_game_blueprints(app) # Call the function that registers game Blueprints
-    app.logger.info("Function 'register_game_blueprints' called (early stage).") # ✅ שימוש ב-app.logger.info
+    app.logger.info("Function 'register_game_blueprints' called (early stage).") 
 
     # ייבוא מודלים (מוקדם מספיק, לפני db.create_all)
     from .models.user import User
@@ -81,19 +81,19 @@ def create_app():
     # --- Create Database Tables ---
     with app.app_context():
         db.create_all() 
-        app.logger.info("Database tables created/updated successfully.") # ✅ שימוש ב-app.logger.info
+        app.logger.info("Database tables created/updated successfully.") 
 
-        app.logger.info("Attempting to test database table existence by fetching a user...") # ✅ שימוש ב-app.logger.info
+        app.logger.info("Attempting to test database table existence by fetching a user...") 
         try:
             first_user = User.query.first()
             if first_user:
-                app.logger.info(f"Test fetch successful: Found existing user (ID: {first_user.id}). Tables exist and contain data.") # ✅ שימוש ב-app.logger.info
+                app.logger.info(f"Test fetch successful: Found existing user (ID: {first_user.id}). Tables exist and contain data.") 
             else:
-                app.logger.info("Test fetch successful: No existing users found. Tables exist but are empty.") # ✅ שימוש ב-app.logger.info
+                app.logger.info("Test fetch successful: No existing users found. Tables exist but are empty.") 
         except Exception as e:
-            app.logger.error(f"Error during test fetch from User table: {e}") # ✅ שימוש ב-app.logger.error
+            app.logger.error(f"Error during test fetch from User table: {e}") 
             print(f"CRITICAL ERROR: Test fetch failed from User table: { {e} }", file=sys.stderr)
-            app.logger.error("This likely means the database tables were NOT created successfully.") # ✅ שימוש ב-app.logger.error
+            app.logger.error("This likely means the database tables were NOT created successfully.") 
 
         # --- Initialize DBManager and GameManager ---
         global db_manager_instance 
@@ -101,11 +101,11 @@ def create_app():
 
         db_manager_instance = DBManager(db) 
         app.db_manager = db_manager_instance 
-        app.logger.info("DBManager initialized successfully.") # ✅ שימוש ב-app.logger.info
+        app.logger.info("DBManager initialized successfully.") 
 
         game_manager_instance = GameManager(db_manager_instance) 
         app.game_manager = game_manager_instance 
-        app.logger.info("GameManager initialized successfully within the application context.") # ✅ שימוש ב-app.logger.info
+        app.logger.info("GameManager initialized successfully within the application context.") 
 
         existing_tables = db_manager_instance.get_all_poker_tables()
         if not existing_tables:
@@ -123,25 +123,8 @@ def create_app():
         else:
             app.logger.info(f"Found {len(existing_tables)} existing poker tables. No default table created.")
 
-            
-    # --- Configure Flask-Login user loader ---
-    @login_manager.user_loader
-    def load_user(user_id):
-        """
-        Flask-Login user loader callback.
-        Given a user ID (as a string), returns the User object or None.
-        This is used to reload the user from the session.
-        """
-        if db_manager_instance:
-            return db_manager_instance.get_user_by_id(int(user_id))
-        else:
-            from .models.user import User # Local import to prevent Circular Import
-            return User.query.get(int(user_id))
-
-    @app.after_request
-    def log_set_cookie(response):
-        # For debugging cookies, can replace with appropriate logging
-        return response
+    # --- NO user_loader here! It's in auth/routes.py ---
+    # --- NO app.after_request log_set_cookie here! ---
 
     # --- Initialize SocketIO Handlers and Emitters ---
     from .game.sockets.emitters_oop import PokerEmitters
@@ -150,5 +133,5 @@ def create_app():
     from .game.sockets import register_socket_handlers
     register_socket_handlers(socketio)
 
-    app.logger.info("App creation complete. Returning app instance.") # ✅ שימוש ב-app.logger.info
+    app.logger.info("App creation complete. Returning app instance.") 
     return app

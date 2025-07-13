@@ -210,7 +210,6 @@ class GameManager:
                 player.socket_id = sid
             self.logger.info(f"Existing Player object retrieved for user_id {player_id}.")
         else:
-            print(" see the user chips: ", user.chips)
             player = Player(user=user, socket_id=sid) 
             self._connected_players[player_id] = player
             self.logger.info(f"New Player object created for user_id <User {user.nickname}> (username: {user.nickname}).")

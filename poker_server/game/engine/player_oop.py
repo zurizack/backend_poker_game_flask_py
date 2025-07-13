@@ -65,9 +65,9 @@ class Player:
         logger.debug(f"Socket ID for player {self._username} (ID: {self._user_id}) updated to {value}.")
 
     # --- Methods for general User information (bank account) ---
-    def get_user_total_chips(self) -> float: # Assuming user.chips is float
+    def get_user_total_chips(self) -> float: 
         """Returns the total chips in the user's general account (off the table)."""
-        return self._user.chips
+        return self._user.balance # ✅ Changed from self._user.chips to self._user.balance
 
     # --- Methods for managing seated positions and chips on specific tables ---
 
@@ -75,11 +75,11 @@ class Player:
         """Checks if the player is seated at a specific table."""
         return table_id in self._seated_positions
 
-    # def is_seated_at_any_table(self) -> bool: # ✅ פונקציה חדשה
-    #     """
-    #     Checks if the player is currently seated at any table.
-    #     """
-    #     return bool(self._seated_tables_data)
+    def is_seated_at_any_table(self) -> bool: # ✅ פונקציה שהוחזרה לפעולה
+        """
+        Checks if the player is currently seated at any table.
+        """
+        return bool(self._seated_positions)
 
     def get_seated_position(self, table_id: str) -> Optional[Dict[str, Any]]:
         """Returns the seated position data for a specific table."""
@@ -112,8 +112,8 @@ class Player:
         if not isinstance(amount, (int, float)) or amount <= 0:
             raise ValueError("Buy-in amount must be a positive number.")
         
-        if self._user.chips < amount: 
-            raise ValueError(f"User {self._username} (ID: {self._user_id}) does not have enough chips in their account ({self._user.chips}) to buy in {amount} chips.")
+        if self._user.balance < amount: # ✅ Changed from self._user.chips to self._user.balance
+            raise ValueError(f"User {self._username} (ID: {self._user_id}) does not have enough chips in their account ({self._user.balance}) to buy in {amount} chips.") # ✅ Changed
         
         # If not yet seated at this table, initialize the chips and hand objects
         if table_id not in self._seated_positions:
@@ -126,8 +126,8 @@ class Player:
         
         table_chips = self._seated_positions[table_id]['chips_on_table']
         table_chips.add(amount) # Add chips to the player's table stack
-        self._user.chips -= amount # Deduct chips from the general account
-        logger.info(f"Player {self._username} (ID: {self._user_id}) performed buy-in of {amount} chips for table {table_id}. Total table chips: {table_chips.get_amount()}. User's total chips: {self._user.chips}.")
+        self._user.balance -= amount # ✅ Changed from self._user.chips to self._user.balance # Deduct chips from the general account
+        logger.info(f"Player {self._username} (ID: {self._user_id}) performed buy-in of {amount} chips for table {table_id}. Total table chips: {table_chips.get_amount()}. User's total chips: {self._user.balance}.") # ✅ Changed
 
     def add_chips_to_table(self, table_id: str, amount: float):
         """Adds chips to the player's chip stack on a specific table (e.g., winning a pot)."""
@@ -159,9 +159,9 @@ class Player:
         
         remaining_chips = self._seated_positions[table_id]['chips_on_table'].get_amount()
         if remaining_chips > 0:
-            self._user.chips += remaining_chips
+            self._user.balance += remaining_chips # ✅ Changed from self._user.chips to self._user.balance
             self._seated_positions[table_id]['chips_on_table'].remove(remaining_chips) # Clear table stack
-            logger.info(f"Player {self._username} (ID: {self._user_id}) returned {remaining_chips} chips from table {table_id} to balance. New balance: {self._user.chips}.")
+            logger.info(f"Player {self._username} (ID: {self._user_id}) returned {remaining_chips} chips from table {table_id} to balance. New balance: {self._user.balance}.") # ✅ Changed
         else:
             logger.info(f"Player {self._username} (ID: {self._user_id}) had no chips to return from table {table_id}.")
 
@@ -205,6 +205,12 @@ class Player:
     def is_viewing_table(self, table_id: str) -> bool:
         """Checks if the player is currently viewing a specific table."""
         return table_id in self._viewing_tables
+
+    def is_viewing_any_table(self) -> bool: # ✅ פונקציה שהוחזרה לפעולה
+        """
+        Checks if the player is currently viewing any table.
+        """
+        return bool(self._viewing_tables)
 
     def add_viewing_table(self, table_id: str):
         """Adds a table to the list of tables the player is viewing."""
@@ -352,7 +358,7 @@ class Player:
                 status_display = status_en.get(data['player_hand'].get_status(), "Unknown") 
                 last_action_display = data['player_hand'].get_last_action().value if data['player_hand'].get_last_action() else "None"
                 seated_details.append(
-                    f"  - Table {table_id} (Seat {data['seat_number']}): "
+                    f"  - Table {table_id} (Seat {data['seat_number']}): "
                     f"Chips: {data['chips_on_table'].get_amount()}, "
                     f"Bet: {data['player_hand'].get_bet_in_hand()}, "
                     f"Status: {status_display}, Action: {last_action_display}"

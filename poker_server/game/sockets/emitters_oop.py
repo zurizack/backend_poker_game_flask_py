@@ -99,7 +99,7 @@ class PokerEmitters:
         # Creating the table state dictionary
         # The assumption is that table_obj has a to_dict method that accepts requesting_player_id
         # and reveals private cards only to the requesting player.
-        table_state_data = table_obj.to_dict(requesting_player_id=requesting_player_id)
+        table_state_data = table_obj.to_dict()
         
         cls._emit('full_table_state', table_state_data, sid=target_sid)
         logger.debug(f"Full table state emitted to SID {target_sid}.")

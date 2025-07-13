@@ -1,125 +1,140 @@
 # poker_server/auth/routes.py
 from flask import Blueprint, request, jsonify
-from ..models.user import User
-from .. import db
-from datetime import datetime
-from flask_login import login_user, logout_user, current_user
-import sys
+from flask_login import login_user, logout_user, login_required, current_user
+from sqlalchemy.exc import IntegrityError
+import logging
+from datetime import datetime 
 
+from poker_server import db, login_manager 
+from poker_server.models.user import User 
 
-# Create a Blueprint for authentication routes, prefixing all with /auth
-auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+auth_bp = Blueprint('auth_bp', __name__, url_prefix='/auth')
+logger = logging.getLogger(__name__) 
 
-# Route to register a new user
+@login_manager.user_loader
+def load_user(user_id):
+    logger.debug(f"Attempting to load user with ID: {user_id}")
+    return User.query.get(int(user_id))
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    data = request.get_json()  # Parse incoming JSON request body
+    logger.info("Attempting to register a new user.")
+    data = request.get_json()
 
-    # Extract required registration fields from the JSON data
+    if not data:
+        logger.warning("Registration failed: No JSON data provided.")
+        return jsonify({"message": "No JSON data provided"}), 400
+
     first_name = data.get('first_name')
     last_name = data.get('last_name')
-    nickname = data.get('nickname')
+    username = data.get('username') 
+    nickname = data.get('nickname') # ✅ Get nickname from request
     email = data.get('email')
     password = data.get('password')
-    birth_date_str = data.get('birth_date')  # Expected format: 'YYYY-MM-DD'
+    birth_date_str = data.get('birth_date') 
 
-    # Check that all required fields are present
-    if not all([first_name, last_name, nickname, email, password, birth_date_str]):
-        return jsonify({'error': 'Missing required fields'}), 400
+    # Basic validation
+    if not all([first_name, last_name, username, nickname, email, password, birth_date_str]): # ✅ Added nickname to check
+        logger.warning("Registration failed: Missing required fields.")
+        return jsonify({"message": "All fields (first_name, last_name, username, nickname, email, password, birth_date) are required"}), 400 # ✅ Updated message
+    
+    if len(username) < 3 or len(username) > 64:
+        logger.warning(f"Registration failed: Username '{username}' length invalid.")
+        return jsonify({"message": "Username must be between 3 and 64 characters"}), 400
 
-    # Check if the email is already registered
-    if User.query.filter_by(email=email).first():
-        return jsonify({'error': 'Email already exists'}), 400
+    if len(nickname) < 3 or len(nickname) > 64: # ✅ Add nickname length validation
+        logger.warning(f"Registration failed: Nickname '{nickname}' length invalid.")
+        return jsonify({"message": "Nickname must be between 3 and 64 characters"}), 400
 
-    # Check if the nickname is already taken
-    if User.query.filter_by(nickname=nickname).first():
-        return jsonify({'error': 'Nickname already exists'}), 400
+    if len(password) < 6:
+        logger.warning("Registration failed: Password too short.")
+        return jsonify({"message": "Password must be at least 6 characters long"}), 400
 
     # Validate and parse the birth date string to a date object
     try:
         birthdate = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
     except ValueError:
-        return jsonify({'error': 'Invalid birth_date format. Use YYYY-MM-DD.'}), 400
+        logger.warning(f"Registration failed: Invalid birth_date format '{birth_date_str}'.")
+        return jsonify({'message': 'Invalid birth_date format. Use YYYY-MM-DD.'}), 400
 
-    # Create a new User instance with the provided data
-    user = User(
+    # Check if username, nickname or email already exists
+    if User.query.filter_by(username=username).first():
+        logger.warning(f"Registration failed: Username '{username}' already exists.")
+        return jsonify({"message": "Username already exists"}), 409 # Conflict
+    
+    if User.query.filter_by(nickname=nickname).first(): # ✅ Check if nickname already exists
+        logger.warning(f"Registration failed: Nickname '{nickname}' already exists.")
+        return jsonify({"message": "Nickname already exists"}), 409 # Conflict
+    
+    if User.query.filter_by(email=email).first():
+        logger.warning(f"Registration failed: Email '{email}' already exists.")
+        return jsonify({"message": "Email already exists"}), 409 # Conflict
+
+    new_user = User(
         first_name=first_name,
         last_name=last_name,
-        nickname=nickname,
+        username=username, 
+        nickname=nickname, # ✅ Pass nickname to User constructor
         email=email,
         birthdate=birthdate
     )
-    user.set_password(password)  # Hash and set the user's password securely
+    new_user.set_password(password) 
 
-    # Add the new user to the database session and commit
-    db.session.add(user)
-    db.session.commit()
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        logger.info(f"User '{username}' (Nickname: '{nickname}') registered successfully.") # ✅ Updated log
+        return jsonify({"message": "User registered successfully", "user": new_user.to_dict()}), 201 
+    except IntegrityError as e:
+        db.session.rollback()
+        logger.error(f"Database integrity error during registration for '{username}' (Nickname: '{nickname}'): {e}", exc_info=True) # ✅ Updated log
+        return jsonify({"message": "Database error during registration"}), 500
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"An unexpected error occurred during registration for '{username}' (Nickname: '{nickname}'): {e}", exc_info=True) # ✅ Updated log
+        return jsonify({"message": "An unexpected error occurred"}), 500
 
-    # Return a success message upon registration
-    return jsonify({'message': 'User registered successfully'}), 201
-
-# Route to log in an existing user
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    print("DEBUG: /auth/login endpoint hit.", file=sys.stderr)
-    print(">> Headers:", request.headers, file=sys.stderr)
-    print(">> Content-Type:", request.content_type, file=sys.stderr)
-    print(">> Raw body:", request.data, file=sys.stderr)
-    
-    data = request.get_json(silent=True) # השתמש ב-silent=True כדי למנוע שגיאה אם הבקשה אינה JSON
-    print(">> JSON body (parsed):", data, file=sys.stderr)
-    print(">> Form body:", request.form, file=sys.stderr)
+    logger.info("Attempting to log in a user.")
+    data = request.get_json()
 
-    # Extract login credentials from the request data
-    email = data.get('email') if data else None
-    nickname = data.get('nickname') if data else None
-    password = data.get('password') if data else None
+    if not data:
+        logger.warning("Login failed: No JSON data provided.")
+        return jsonify({"message": "No JSON data provided"}), 400
 
-    print(f"DEBUG: Received email: {email}, nickname: {nickname}, password present: {bool(password)}", file=sys.stderr)
+    username = data.get('username') 
+    password = data.get('password')
 
-    # Ensure password and either email or nickname is provided
-    if not password or (not email and not nickname):
-        print("DEBUG: Missing login credentials.", file=sys.stderr)
-        return jsonify({'error': 'Missing login credentials'}), 400
+    if not username or not password:
+        logger.warning("Login failed: Username or password missing.")
+        return jsonify({"message": "Username and password are required"}), 400
 
-    user = None
-    # Attempt to find user by email if provided
-    if email:
-        user = User.query.filter_by(email=email).first()
-        print(f"DEBUG: User found by email: {user.email if user else 'None'}", file=sys.stderr)
-    # Otherwise, try to find by nickname
-    elif nickname:
-        user = User.query.filter_by(nickname=nickname).first()
-        print(f"DEBUG: User found by nickname: {user.nickname if user else 'None'}", file=sys.stderr)
+    user = User.query.filter_by(username=username).first() 
 
-    # Check if user exists and if password matches
-    if user is None:
-        print("DEBUG: User not found.", file=sys.stderr)
-        return jsonify({'error': 'Invalid email/nickname or password'}), 401
-    
-    if not user.check_password(password):
-        print("DEBUG: Password check failed.", file=sys.stderr)
-        return jsonify({'error': 'Invalid email/nickname or password'}), 401
+    if user is None or not user.check_password(password):
+        logger.warning(f"Login failed: Invalid credentials for username '{username}'.")
+        return jsonify({"message": "Invalid username or password"}), 401 
 
-    print(f"DEBUG: User {user.nickname} authenticated successfully. Attempting login_user.", file=sys.stderr)
-    login_user(user)  # Log in the user via Flask-Login
-    print("DEBUG: login_user called successfully.", file=sys.stderr)
+    login_user(user) 
+    logger.info(f"User '{username}' (Nickname: '{user.nickname}') logged in successfully.") # ✅ Updated log to show nickname
+    return jsonify({"message": "Logged in successfully", "user": user.to_dict()}), 200 
 
-    return jsonify({
-        'message': 'Logged in successfully',
-        'user': {
-            'user_id': user.id,
-            'username': user.nickname,
-            'is_admin': user.is_admin
-        }
-    })
-
-
-# Route to log out the current user
 @auth_bp.route('/logout', methods=['POST'])
+@login_required 
 def logout():
+    logger.info(f"Attempting to log out user '{current_user.username}' (Nickname: '{current_user.nickname}').") # ✅ Updated log
+    logout_user() 
+    logger.info("User logged out successfully.")
+    return jsonify({"message": "Logged out successfully"}), 200
+
+@auth_bp.route('/status', methods=['GET'])
+def status():
+    logger.info("Checking user authentication status.")
     if current_user.is_authenticated:
-        logout_user()
-        return jsonify({'message': 'Logged out successfully'}), 200
+        logger.info(f"User '{current_user.username}' (Nickname: '{current_user.nickname}') is authenticated.") # ✅ Updated log
+        return jsonify({"authenticated": True, "user": current_user.to_dict()}), 200 
     else:
-        return jsonify({'error': 'User not logged in'}), 401
+        logger.info("User is not authenticated.")
+        return jsonify({"authenticated": False}), 200
+
