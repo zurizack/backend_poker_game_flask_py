@@ -76,7 +76,6 @@ def create_app():
 
     # ייבוא מודלים (מוקדם מספיק, לפני db.create_all)
     from .models.user import User
-    from .models.poker_table import PokerTable
 
     # --- Create Database Tables ---
     with app.app_context():

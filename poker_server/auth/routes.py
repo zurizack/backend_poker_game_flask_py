@@ -5,8 +5,8 @@ from sqlalchemy.exc import IntegrityError
 import logging
 from datetime import datetime 
 
-from poker_server import db, login_manager 
-from poker_server.models.user import User 
+from ...poker_server import db, login_manager 
+from ..models.user import User 
 
 auth_bp = Blueprint('auth_bp', __name__, url_prefix='/auth')
 logger = logging.getLogger(__name__) 

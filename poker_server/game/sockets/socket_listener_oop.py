@@ -8,8 +8,7 @@ from typing import Dict, Any
 from .emitters_oop import PokerEmitters
 from .handlers.join_table_handler import handle_join_table_request
 from .handlers.player_take_a_seat_handler import handle_player_take_a_seat_request
-from ... import game_manager_instance
-
+from ... import game_manager_instance # ייבוא game_manager_instance
 
 
 logger = logging.getLogger(__name__)
@@ -78,9 +77,9 @@ def register_handlers_oop(socketio):
 
         logger.info(f"SocketListener: Player {player_id} (SID: {sid}) requested to join table with data: {data}")
         
-        # ✅ Logic to handle a player already seated in join_table
+        # ✅ FIX: Logic to handle a player already seated in join_table - removed player_obj.table_id check
         player_obj = game_manager_instance.get_player_by_user_id(player_id)
-        if player_obj and player_obj.is_seated_at_table(table_id_str) and player_obj.table_id == table_id_str:
+        if player_obj and player_obj.is_seated_at_table(table_id_str): # Removed 'and player_obj.table_id == table_id_str'
             logger.info(f"Player {player_id} (SID: {sid}) is already seated at table {table_id_str}. Sending full state directly.")
             join_room(table_id_str) # Ensure they are in the room
             table_state = game_manager_instance.get_table_state(table_id_str)
